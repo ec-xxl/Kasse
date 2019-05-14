@@ -1,6 +1,5 @@
-from tkinter import *
 import sqlite3
-
+from tkinter import *
 
 master = Tk()
 selectedTeam = StringVar()
@@ -14,9 +13,9 @@ def add_player(team: str):
 
     def callback():
         player = e.get()  # This is the text you may want to use later
-        insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
-        runQuery(insert_player, (player, team))     # add to Database
-        listbox.insert(END, player)    # add to Listbox
+        insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"  # SQL-String
+        runQuery(insert_player, (player, team))  # add to Database
+        listbox.insert(END, player)  # add to Listbox
         popup.destroy()
 
     popupb = Button(popup, text="OK", width=10, command=callback)
@@ -25,11 +24,11 @@ def add_player(team: str):
     popup.mainloop()
 
 
-
 def get_players(team: str):
     select_player = "SELECT player_name FROM players WHERE team_name = ?"
     players = runQuery(select_player, (team,), receive=TRUE)
     return players
+
 
 def onSelectTeam():
     listbox.delete(0, END)
@@ -37,11 +36,12 @@ def onSelectTeam():
     for player in players:
         listbox.insert(END, player)
 
+
 def getSelectedTeam():
-    #TODO: delete print statements
+    # TODO: delete print statements
     print(selectedTeam.get())
     print("happily I announce that this is the expected result")
-    #TODO: unselect Team
+    # TODO: unselect Team
     return selectedTeam.get()
 
 
@@ -77,15 +77,10 @@ for team in teamList:
     b = Radiobutton(master, text=name, command=lambda: onSelectTeam(), variable=selectedTeam, value=name, indicatoron=0)
     b.grid(column=int(pos) % 4, row=int(pos) // 4)
 
-
-
-
 listbox = Listbox(master)
 listbox.grid(column=5, row=0, rowspan=3, columnspan=2)
 
-
-
-#TODO: Add check if a Team is selected. If not create info to select team
+# TODO: Add check if a Team is selected. If not create info to select team
 b = Button(master, text="Add Player", command=lambda: add_player(getSelectedTeam()))
 b.grid(row=4, column=5)
 tButton = Button(master, text="Test")
