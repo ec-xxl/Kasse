@@ -1,24 +1,24 @@
 import sqlite3
-from tkinter import *
+import tkinter as tk
 
-master = Tk()
-selectedTeam = StringVar()
+master = tk.Tk()
+selectedTeam = tk.StringVar()
 
 
 def add_player(team: str):
-    popup = Tk()
+    popup = tk.Tk()
     popup.attributes("-topmost", True)
-    e = Entry(popup)
+    e = tk.Entry(popup)
     e.pack()
 
     def callback():
         player = e.get()  # This is the text you may want to use later
         insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"  # SQL-String
         runQuery(insert_player, (player, team))  # add to Database
-        listbox.insert(END, player)  # add to Listbox
+        listbox.insert(tk.END, player)  # add to Listbox
         popup.destroy()
 
-    popupb = Button(popup, text="OK", width=10, command=callback)
+    popupb = tk.Button(popup, text="OK", width=10, command=callback)
     popupb.pack()
 
     popup.mainloop()
@@ -26,15 +26,15 @@ def add_player(team: str):
 
 def get_players(team: str):
     select_player = "SELECT player_name FROM players WHERE team_name = ?"
-    players = runQuery(select_player, (team,), receive=TRUE)
+    players = runQuery(select_player, (team,), receive=tk.TRUE)
     return players
 
 
 def onSelectTeam():
-    listbox.delete(0, END)
+    listbox.delete(0, tk.END)
     players = get_players(getSelectedTeam())
     for player in players:
-        listbox.insert(END, player)
+        listbox.insert(tk.END, player)
 
 
 def getSelectedTeam():
@@ -71,18 +71,20 @@ runQuery(create_table)
 f = open("teams.txt", "r")
 teamList = f.readlines()
 f.close()
+
 # create Radiobutton for each Team in TeamList
 for team in teamList:
     [name, pos] = team.split(";")
-    b = Radiobutton(master, text=name, command=lambda: onSelectTeam(), variable=selectedTeam, value=name, indicatoron=0)
+    b = tk.Radiobutton(master, text=name, command=lambda: onSelectTeam(), variable=selectedTeam, value=name, indicatoron=0)
     b.grid(column=int(pos) % 4, row=int(pos) // 4)
 
-listbox = Listbox(master)
+# create Listbox for player names
+listbox = tk.Listbox(master)
 listbox.grid(column=5, row=0, rowspan=3, columnspan=2)
 
 # TODO: Add check if a Team is selected. If not create info to select team
-b = Button(master, text="Add Player", command=lambda: add_player(getSelectedTeam()))
+b = tk.Button(master, text="Add Player", command=lambda: add_player(getSelectedTeam()))
 b.grid(row=4, column=5)
-tButton = Button(master, text="Test")
+tButton = tk.Button(master, text="Test")
 tButton.grid(column=6, row=4)
 master.mainloop()
