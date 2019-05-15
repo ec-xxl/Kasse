@@ -1,0 +1,4 @@
+Wurst;2.5;0
+Schnitzel;3;1
+Salat groß;3;2
+Salat klein;2;3
