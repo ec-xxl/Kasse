@@ -2,12 +2,14 @@ import os
 from functools import partial
 import tkinter as tk
 import sqlite3
+import tkinter as tk
 
+master = tk.Tk()
+selectedTeam = tk.StringVar()
 
 master = tk.Tk()
 selectedTeam = tk.StringVar()
 selectedItems = {}
-
 
 def add_player(team: str):
     popup = tk.Tk()
