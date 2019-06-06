@@ -12,7 +12,6 @@ displayedPlayers = []
 totalSV = tk.StringVar()
 totalSV.set("0.00 €")
 
-
 def add_player(team: str):
     popup = tk.Tk()
     popup.attributes("-topmost", True)
@@ -67,9 +66,6 @@ def onClickItem(name: str, price:float):
         selectedItems[(name, price)] = 0
     selectedItems[(name, price)] += 1
     displayOrder()
-
-
-
 
 def getSelectedPlayerID():
     #TODO: catch Error if no player selected
@@ -149,8 +145,8 @@ def runQuery(sql, data=None, receive=False):
     conn.close()
 
 
-delete_table = "DROP TABLE IF EXISTS purchases"
-runQuery(delete_table)
+# delete_table = "DROP TABLE IF EXISTS purchases"
+# runQuery(delete_table)
 
 # create Player Table
 create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text)"
@@ -198,14 +194,7 @@ listbox_player.grid(column=0, row=0, columnspan=2)
 # TODO: Add check if a Team is selected. If not create info to select team
 b = tk.Button(playerFrame, text="Add Player", command=lambda: add_player(getSelectedTeam()))
 b.grid(column=0, row=1)
-
-
-def test():
-    listbox_player.insert(tk.END, ("Test1", "Test2", "Test3"))
-    listbox_player.setvar("42")
-
-
-tButton = tk.Button(playerFrame, text="Test", command=lambda: test())
+tButton = tk.Button(playerFrame, text="Test")
 tButton.grid(column=1, row=1)
 
 
