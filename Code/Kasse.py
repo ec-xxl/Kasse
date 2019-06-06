@@ -56,9 +56,12 @@ def displayPlayers(team: str):
         listbox_player.insert(tk.END, player+str(player_id))
 
 def displayOrder():
-    listbox_order.delete(0,tk.END)
+    orders = tree.get_children()
+    if orders != '()':
+        for order in orders:
+            tree.delete(order)
     for item in selectedItems:
-        listbox_order.insert(tk.END, item[0]+" "+str(item[1])+"€ x "+str(selectedItems[item]))
+        tree.insert("", "end", text=item[0], values=(str(item[1])+"€", str(selectedItems[item])), tags=item)
     updateTotal()
 
 def onClickItem(name: str, price:float):
@@ -69,7 +72,7 @@ def onClickItem(name: str, price:float):
 
 def getSelectedPlayerID():
     #TODO: catch Error if no player selected
-    pos = listbox_player.curselection()
+    pos = listbox_player.curselection()[0]
     return displayedPlayers[pos][0]
 
 def confirmOrder():
@@ -78,7 +81,7 @@ def confirmOrder():
     if player_id:
         for item in selectedItems:
             insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, payed) VALUES (?, ?, ?, ?, ?)"
-            data = (player_id[0], item[0], item[1], selectedItems[item], 0)
+            data = (player_id, item[0], item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
         selectedItems = {}
         displayOrder()
@@ -106,15 +109,17 @@ def deleteOrder():
 
 def onSelectOrder(evt):
     global selectedItems
-    w = evt.widget
-    if w.curselection is not ():
-        idx = int(w.curselection()[0])
-        key = list(selectedItems.keys())[idx]
-        quantity = selectedItems[key] - 1
-        selectedItems[key] = quantity
-        if quantity == 0:
-            del selectedItems[list(selectedItems.keys())[idx]]
-        displayOrder()
+    curItem = tree.focus()
+    item = tree.item(curItem)
+    #selectedItems[(item.get('tags')[0], float(item.get('tags')[1]))]
+    key = (item.get('tags')[0], float(item.get('tags')[1]))
+    #idx = int(w.focus()[0])
+    #key = list(selectedItems.keys())[idx]
+    quantity = selectedItems[key] - 1
+    selectedItems[key] = quantity
+    if quantity == 0:
+        del selectedItems[key]
+    displayOrder()
 
 
 
@@ -200,10 +205,6 @@ tButton.grid(column=1, row=1)
 
 orderFrame = tk.Frame(master)
 orderFrame.grid(column=4, row=0)
-# List of Items in Order
-listbox_order = tk.Listbox(orderFrame)
-listbox_order.grid(column=0, row=0)
-listbox_order.bind('<<ListboxSelect>>', onSelectOrder)
 
 # Optionen auf OrderFrame
 tk.Button(orderFrame, text="Stornieren", command=stornoOrder).grid(column=0, row=3)
@@ -213,22 +214,14 @@ tk.Button(orderFrame, text="Buchung bestätigen", command=confirmOrder).grid(col
 # Summe des Kaufes
 totalLabel = tk.Label(orderFrame, textvariable=totalSV).grid(column=0, row=2)
 
-treeFrame = tk.Frame(master)
-treeFrame.grid(column=6, row=0)
-tree = ttk.Treeview(treeFrame)
+
+tree = ttk.Treeview(orderFrame)
 tree["columns"]=("Preis", "Anzahl")
 tree.heading("0",  text="Bestellung")
 tree.heading("Preis", text="Preis", anchor=tk.W)
 tree.heading("Anzahl", text="Anzahl", anchor=tk.W)
+tree.bind('<<TreeviewSelect>>', onSelectOrder)
 
-
-# Level 2
-photo = tk.PhotoImage(file="minus-8-64.gif")
-tree.insert("", "end", image=photo, text="Salat", values=("23-Jun-17 11:28", "PNG file"))
-tree.insert("", "end", text="Schnitzel", values=("23-Jun-17 11:29", "PNG file"))
-tree.insert("", "end", text="Hilfe", values=("23-Jun-17 11:30", "PNG file"))
-
-
-tree.pack(side=tk.TOP)
+tree.grid(column=0, row=0)
 
 master.mainloop()
