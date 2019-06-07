@@ -12,14 +12,16 @@ displayedPlayers = []
 totalSV = tk.StringVar()
 totalSV.set("0.00 €")
 
-def add_player(team: str):
-    popup = tk.Tk()
-    popup.attributes("-topmost", True)
-    e = tk.Entry(popup)
-    e.pack()
-    e.focus()
-    os.system("osk")
 
+def popupError(s):
+    popupRoot = tk.Tk()
+    popupRoot.after(2000, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
+    popupButton = tk.Button(popupRoot, text=s, font=("Verdana", 12), bg="yellow", command=lambda: popupRoot.destroy())
+    popupButton.pack()
+    popupRoot.geometry('400x50+700+500')
+    popupRoot.mainloop()
+
+def add_player():
     def callback():
         player = e.get()  # This is the text you may want to use later
         insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
@@ -27,10 +29,18 @@ def add_player(team: str):
         displayPlayers(team)    # add to Listbox
         popup.destroy()
 
-    popButton = tk.Button(popup, text="OK", width=10, command=callback)
-    popButton.pack()
-
-    popup.mainloop()
+    if getSelectedTeam():
+        team = getSelectedTeam()
+        popup = tk.Tk()
+        popup.attributes("-topmost", True)
+        e = tk.Entry(popup)
+        e.pack()
+        e.focus()
+        popButton = tk.Button(popup, text="OK", width=10, command=callback)
+        popButton.pack()
+        popup.mainloop()
+    else:
+        popupError("Bitte ein Team auswählen")
 
 
 def get_players(team: str):
@@ -53,7 +63,7 @@ def displayPlayers(team: str):
     global displayedPlayers
     displayedPlayers = players
     for player_id, player in players:
-        listbox_player.insert(tk.END, player+str(player_id))
+        listbox_player.insert(tk.END, player)
 
 def displayOrder():
     orders = tree.get_children()
@@ -61,7 +71,7 @@ def displayOrder():
         for order in orders:
             tree.delete(order)
     for item in selectedItems:
-        tree.insert("", "end", text=item[0], values=(str(item[1])+"€", str(selectedItems[item])), tags=item)
+        tree.insert("", "end", text=item[0], values=("%.2f€" % item[1], str(selectedItems[item]), "%.2f€" % (item[1]*selectedItems[item])), tags=item)
     updateTotal()
 
 def onClickItem(name: str, price:float):
@@ -71,9 +81,13 @@ def onClickItem(name: str, price:float):
     displayOrder()
 
 def getSelectedPlayerID():
-    #TODO: catch Error if no player selected
-    pos = listbox_player.curselection()[0]
-    return displayedPlayers[pos][0]
+    if listbox_player.curselection():
+        pos = listbox_player.curselection()[0]
+        return displayedPlayers[pos][0]
+    else:
+        popupError("Bitte einen Spieler auswählen")
+
+
 
 def confirmOrder():
     global selectedItems
@@ -85,7 +99,6 @@ def confirmOrder():
             runQuery(insert_order, data)
         selectedItems = {}
         displayOrder()
-        #TODO: else display Select Player
 
 
 def stornoOrder():
@@ -94,11 +107,10 @@ def stornoOrder():
     if player_id:
         for item in selectedItems:
             insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, payed) VALUES (?, ?, ?, ?, ?)"
-            data = (player_id[0], item[0], item[1], -selectedItems[item], 0)
+            data = (player_id, item[0], -item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
         selectedItems = {}
         displayOrder()
-        # TODO: else display Select Player --- same as confirmOrder
 
 
 def deleteOrder():
@@ -111,10 +123,7 @@ def onSelectOrder(evt):
     global selectedItems
     curItem = tree.focus()
     item = tree.item(curItem)
-    #selectedItems[(item.get('tags')[0], float(item.get('tags')[1]))]
     key = (item.get('tags')[0], float(item.get('tags')[1]))
-    #idx = int(w.focus()[0])
-    #key = list(selectedItems.keys())[idx]
     quantity = selectedItems[key] - 1
     selectedItems[key] = quantity
     if quantity == 0:
@@ -122,13 +131,38 @@ def onSelectOrder(evt):
     displayOrder()
 
 
-
 def updateTotal():
     global totalSV
     total = 0
     for item in selectedItems:
         total += item[1]*selectedItems[item]
-    totalSV.set("%.2f €" % total)
+    totalSV.set("Summe: %.2f €" % total)
+
+
+def popupPay():
+    playerID = getSelectedPlayerID()
+    if playerID:
+        popPay = tk.Tk()
+        popPay.attributes("-topmost", True)
+        listbox_purchases = tk.Listbox(popPay)
+        listbox_purchases.grid(column=0, row=0)
+
+        select_purchases = "SELECT item_name, price, SUM(item_quantity) FROM purchases WHERE player_id = ? AND payed = 0 GROUP BY item_name, price"
+        purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
+        total = 0
+        for purchase in purchases:
+            listbox_purchases.insert(tk.END, purchase[0]+" "+str(purchase[1])+"€ x "+str(purchase[2]))
+            total += purchase[1]*purchase[2]
+
+        tk.Label(popPay, text="Summe der Einkäufe %.2f€" % total).grid(column=0, row=1)
+        def deduction():
+            pay_purchases = "UPDATE purchases SET payed = 1 WHERE player_id = ?"
+            runQuery(pay_purchases, (playerID,))
+
+
+        popButton = tk.Button(popPay, text="Abrechnen", width=10, command=deduction)
+        popButton.grid(column=0, row=2)
+        popPay.mainloop()
 
 
 
@@ -196,8 +230,7 @@ playerFrame.grid(column=1, row=0)
 # List of Players in a Team
 listbox_player = tk.Listbox(playerFrame)
 listbox_player.grid(column=0, row=0, columnspan=2)
-# TODO: Add check if a Team is selected. If not create info to select team
-b = tk.Button(playerFrame, text="Add Player", command=lambda: add_player(getSelectedTeam()))
+b = tk.Button(playerFrame, text="Add Player", command=add_player)
 b.grid(column=0, row=1)
 tButton = tk.Button(playerFrame, text="Test")
 tButton.grid(column=1, row=1)
@@ -207,16 +240,17 @@ orderFrame = tk.Frame(master)
 orderFrame.grid(column=4, row=0)
 
 # Optionen auf OrderFrame
-tk.Button(orderFrame, text="Stornieren", command=stornoOrder).grid(column=0, row=3)
-tk.Button(orderFrame, text="Auswahl löschen", command=deleteOrder).grid(column=0, row=4)
-tk.Button(orderFrame, text="Buchung bestätigen", command=confirmOrder).grid(column=0, row=5)
+tk.Button(orderFrame, text="Spieler abrechnen", command=popupPay).grid(column=0, row=3)
+tk.Button(orderFrame, text="Buchung stornieren", command=stornoOrder).grid(column=0, row=4)
+tk.Button(orderFrame, text="Auswahl löschen", command=deleteOrder).grid(column=0, row=5)
+tk.Button(orderFrame, text="Buchung bestätigen", command=confirmOrder).grid(column=0, row=6)
 
 # Summe des Kaufes
 totalLabel = tk.Label(orderFrame, textvariable=totalSV).grid(column=0, row=2)
 
 
 tree = ttk.Treeview(orderFrame)
-tree["columns"]=("Preis", "Anzahl")
+tree["columns"]=("Preis", "Anzahl", "Gesammt")
 tree.heading("0",  text="Bestellung")
 tree.heading("Preis", text="Preis", anchor=tk.W)
 tree.heading("Anzahl", text="Anzahl", anchor=tk.W)
