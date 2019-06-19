@@ -76,17 +76,19 @@ widgets.teamimagesoff  = {}
 
 SETTINGS.teamimagesize = int(root.winfo_screenwidth() / 7 * 2 / 3)
 
+Logopath = ["Logo_Colorado","Logo_CrazyDogs","Logo_Disconnection","Logo_FlyingCircus","Logo_FrasbaGold","Logo_Heidees","Logo_Maultaschen","Logo_Mint","Logo_Outernationals","Logo_Parkscheibe","Logo_PrinzHessinnen","Logo_RheinDivers","Logo_Solebang","Logo_Südsee","Logo_WhosThatTeam","Logo_Wombats"]
+
 for i in range(16):
     # create buttons
     widgets.teambuttons[i] = tk.Radiobutton(frames.teams, text=str(i), value=i, indicatoron = tk.FALSE, bg="orange")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
     # load 'on' image
-    img = Image.open("Logo_Südsee_On.gif")
+    img = Image.open(Logopath[i]+"_On.gif")
     img = img.resize((SETTINGS.teamimagesize,SETTINGS.teamimagesize), resample=Image.LANCZOS)
     widgets.teamimageson[i] =  ImageTk.PhotoImage(img)
     widgets.teambuttons[i].config(image=widgets.teamimageson[i])
     # load 'off' image
-    img = Image.open("Logo_Südsee_Off.gif")
+    img = Image.open(Logopath[i]+"_Off.gif")
     img = img.resize((SETTINGS.teamimagesize,SETTINGS.teamimagesize), resample=Image.LANCZOS)
     widgets.teamimagesoff[i] =  ImageTk.PhotoImage(img)
     widgets.teambuttons[i].config(selectimage=widgets.teamimagesoff[i])
