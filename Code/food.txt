@@ -1,4 +1,13 @@
 Wurst;2.5;0
-Schnitzel;3;1
-Salat groß;3;2
-Salat klein;2;3
+Kuchen;1;0
+Schnitzel;3;0
+Salat groß;3;0
+Salat klein;2;0
+Cola;1;1
+Sprite;1;1
+Brisanti;1;1
+Longdrink;4;2
+Bier;2;2
+Scheibe;12;3
+Sticker;1;3
+Sonstiges;1;3

@@ -1,16 +1,16 @@
-Team 1;0
-Team 2;1
-Team 3;2
-Team 4;3
-Team 5;4
-Team 6;5
-Team 7;6
-Team 8;7
-Team 9;8
-Team 10;9
-Team 11;10
-Team 12;11
-Team 13;12
-Team 14;13
-Team 15;14
-Team 16;15
+Colorado
+CrazyDogs
+Disconnection
+FlyingCircus
+FrasbaGold
+Heidees
+Maultaschen
+MINT
+Outernationals
+Parkscheibe
+PrinzHessinnen
+RheinDivers
+Solebang
+TeamSüdsee
+WhosThatTeam
+Wombats
