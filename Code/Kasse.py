@@ -89,11 +89,14 @@ def runQuery(sql, data=None, receive=False):
         conn.commit()
     conn.close()
 
+
+def closeRegister():
+    root.destroy()
 # ---------------------------------------------- #
 # ------------- Selection Actions -------------- #
 # ---------------------------------------------- #
 
-def onSelectTeam(team: str):
+def onSelectTeam(team):
     displayPlayers(team)
 
 def onClickItem(name: str, price:float):
@@ -113,7 +116,8 @@ def onSelectOrder(evt):
         del selectedItems[key]
     displayOrder()
 
-def displayPlayers(team: str):
+
+def displayPlayers(team):
     players = widgets.playerTreeView.get_children()
     if players != '()':
         for player in players:
@@ -205,9 +209,11 @@ def confirmOrder():
     player_id = getSelectedPlayerID()
     if player_id:
         for item in selectedItems:
-            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, payed) VALUES (?, ?, ?, ?, ?)"
+            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
             data = (player_id, item[0], item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
+        set_payed = "UPDATE players SET is_payed=0 WHERE id = ?"
+        runQuery(set_payed, (player_id,))
         selectedItems = {}
         selectedTeam.set("")        # Unselect Team
         displayPlayers("")          # Show empty Player List
@@ -218,7 +224,7 @@ def stornoOrder():
     player_id = getSelectedPlayerID()
     if player_id:
         for item in selectedItems:
-            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, payed) VALUES (?, ?, ?, ?, ?)"
+            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
             data = (player_id, item[0], -item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
         selectedItems = {}
@@ -238,33 +244,53 @@ def popupPay():
         popPay = tk.Tk()
         popPay.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
         popPay.attributes("-topmost", True)
-        popPay.geometry("%dx%d+%d+%d" % (400, 300, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 150))
+        popPay.geometry("%dx%d+%d+%d" % (400, 700, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 150))
         popPay.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
         # create Listbox
         popListbox = tk.Listbox(popPay)
 
+        widgets.payTreeView = ttk.Treeview(popPay)
+        widgets.payTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        widgets.payTreeView.heading("#0", text="Bestellung")
+        widgets.payTreeView.heading("Preis", text="Preis", anchor=tk.W)
+        widgets.payTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
+        widgets.payTreeView.heading("Gesamt", text="Gesamt")
+        widgets.payTreeView.heading("Bezahlt", text="Bezahlt")
+        widgets.payTreeView.column('#0', width=100, stretch=1)
+        widgets.payTreeView.column('Preis', width=20, stretch=1)
+        widgets.payTreeView.column('Anzahl', width=10, stretch=1)
+        widgets.payTreeView.column('Gesamt', width=20, stretch=1)
+        widgets.payTreeView.column('Bezahlt', width=10, stretch=1)
+
+
         # sum up purchases
-        select_purchases = "SELECT item_name, price, SUM(item_quantity) FROM purchases WHERE player_id = ? AND payed = 0 GROUP BY item_name, price"
+        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
-        total = 0
+        total_payed = 0
+        total_due = 0
         for purchase in purchases:
-            popListbox.insert(tk.END, purchase[0]+" "+str(purchase[1])+"€ x "+str(purchase[2]))
-            total += purchase[1]*purchase[2]
+            widgets.payTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
+            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
+            total_payed += (purchase[1]*purchase[2]) if purchase[3] else 0
+        total = total_due+total_payed
 
         def deduction():
-            pay_purchases = "UPDATE purchases SET payed = 1 WHERE player_id = ?"
+            pay_purchases = "UPDATE purchases SET is_payed = 1 WHERE player_id = ?"
             runQuery(pay_purchases, (playerID,))
+            set_payed = "UPDATE players SET is_payed = 1 WHERE id = ?"
+            runQuery(set_payed, (playerID,))
+            displayPlayers(getSelectedTeam())
             popPay.destroy()
 
         # create labels and buttons
         popLabelTotal = tk.Label(popPay, text="Summe der Einkäufe %.2f€" % total)
-        popLabelPaid = tk.Label(popPay, text="Bisher bezahlt %.2f€" % -1)
-        popLabelDue = tk.Label(popPay, text="Übrig %.2f€" % -1)
+        popLabelPaid = tk.Label(popPay, text="Bisher bezahlt %.2f€" % total_payed)
+        popLabelDue = tk.Label(popPay, text="Übrig %.2f€" % total_due)
         popButtonPay = tk.Button(popPay, text="Bezahlen", width=10, command=deduction)
         popButtonAbort = tk.Button(popPay, text="Abbrechen", width=10, command=lambda: popPay.destroy())
 
         # place widgets on grid
-        popListbox.grid(column=0, row=0, sticky=tk.NSEW)
+        widgets.payTreeView.grid(column=0,row=0, sticky=tk.NSEW)
         popLabelTotal.grid(column=0, row=1, sticky=tk.NSEW)
         popLabelPaid.grid(column=0, row=2, sticky=tk.NSEW)
         popLabelDue.grid(column=0, row=3, sticky=tk.NSEW)
@@ -526,7 +552,7 @@ frames.total.columnconfigure(0,weight=1)
 # -------------fill status bar ----------------- #
 # ---------------------------------------------- #
 
-widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", bg="yellow")
+widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", bg="yellow", command=closeRegister)
 widgets.statusbarButtonExit.pack(side="left")
 
 # -------------------------------------------------------------------------------------------- #
@@ -538,7 +564,7 @@ create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary ke
 runQuery(create_table_players)
 
 # create Order Table
-create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, payed integer default 0)"
+create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0)"
 runQuery(create_table_order)
 
 root.mainloop()
