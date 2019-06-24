@@ -32,7 +32,7 @@ selection = SimpleNamespace()
 root = tk.Tk()
 # root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
 # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
-root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
+root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()))
 # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
 # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
 # root.focus_set()
@@ -56,10 +56,12 @@ displayedPlayers = []
 # show error message
 def popupError(s):
     popupRoot = tk.Tk()
+    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
     popupRoot.after(2000, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
-    popupButton = tk.Button(popupRoot, text=s, font=("Verdana", 12), bg="yellow", command=lambda: popupRoot.destroy())
+    popupButton = tk.Label(popupRoot, text=s, font=("Verdana", 12), bg="yellow")
     popupButton.pack()
-    popupRoot.geometry('400x50+700+500')
+    popupRoot.geometry('+700+500')
     popupRoot.mainloop()
 
 # SQLite related
@@ -133,9 +135,10 @@ def getSelectedPlayerID():
 # ------------- Button Actions ----------------- #
 # ---------------------------------------------- #
 
-def add_player():
+def addPlayer():
     def callback(event=None):
         if e.get():
+            team = getSelectedTeam()
             player = e.get()  # This is the text you may want to use later
             insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
             runQuery(insert_player, (player, team))     # add to Database
@@ -143,18 +146,42 @@ def add_player():
             popup.destroy()
 
     if getSelectedTeam():
-        team = getSelectedTeam()
         popup = tk.Tk()
         popup.attributes("-topmost", True)
         e = tk.Entry(popup)
         e.pack()
         e.focus()
-        popButton = tk.Button(popup, text="OK", width=10, command=callback)
+        popButton = tk.Button(popup, text="OK", width=10, command=lambda: callback())
+        popButton.pack()
+        popup.bind("<Return>", lambda: callback())
+        popup.mainloop()
+    else:
+        popupError("Bitte ein Team auswählen")
+
+def renamePlayer():
+    def callback(event=None):
+        if e.get():
+            team = getSelectedTeam()
+            playerID = getSelectedPlayerID()
+            player_name = e.get()  # Entry of new name
+            update_player = "UPDATE players SET player_name = ? WHERE id = ?"    # SQL-String
+            runQuery(update_player, (player_name, playerID))     # add to Database
+            displayPlayers(team)    # add to Listbox
+            popup.destroy()
+
+    if getSelectedPlayerID():
+
+        popup = tk.Tk()
+        popup.attributes("-topmost", True)
+        e = tk.Entry(popup)
+        e.pack()
+        e.focus()
+        popButton = tk.Button(popup, text="OK", width=10, command=lambda: callback())
         popButton.pack()
         popup.bind("<Return>", callback)
         popup.mainloop()
     else:
-        popupError("Bitte ein Team auswählen")
+        popupError("Bitte einen Spieler auswählen")
 
 def confirmOrder():
     global selectedItems
@@ -165,6 +192,8 @@ def confirmOrder():
             data = (player_id, item[0], item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
         selectedItems = {}
+        selectedTeam.set("")        # Unselect Team
+        displayPlayers("")          # Show empty Player List
         displayOrder()
 
 def stornoOrder():
@@ -176,6 +205,8 @@ def stornoOrder():
             data = (player_id, item[0], -item[1], selectedItems[item], 0)
             runQuery(insert_order, data)
         selectedItems = {}
+        selectedTeam.set("")        # Unselect Team
+        displayPlayers("")          # Show empty Player List
         displayOrder()
 
 def deleteOrder():
@@ -318,8 +349,12 @@ widgets.playerlistbox = ScrolledListbox(frames.players)
 widgets.playerlistbox.grid(row=0, column=0, sticky=tk.NSEW)
 widgets.playerlistbox.listbox.configure(font=("Courier", 30))
 
-widgets.playerAddButton = tk.Button(frames.players, text="Spieler hinzufügen", command=add_player)
+widgets.playerAddButton = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer)
 widgets.playerAddButton.grid(row=1, column=0, sticky=tk.NSEW)
+widgets.totalButtonPay = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer)
+widgets.totalButtonPay.grid(row=2, column=0, sticky=tk.NSEW)
+widgets.totalButtonPay = tk.Button(frames.players, text="Spieler abrechnen", command=popupPay)
+widgets.totalButtonPay.grid(row=3, column=0, sticky=tk.NSEW)
 
 frames.players.rowconfigure(0,weight=1)
 frames.players.columnconfigure(0,weight=1)
@@ -360,7 +395,7 @@ for i in range(len(set(SETTINGS.items.category))):
 for i in range(len(SETTINGS.items.name)):
     # create item button
     buttontext = SETTINGS.items.name[i] + "\n" + str(SETTINGS.items.price[i]) + "€"
-    widgets.itembutton[i] = tk.Button(frames.itemcategories[SETTINGS.items.category[i]], text=buttontext, command=partial(onClickItem, SETTINGS.items.name[i], float(SETTINGS.items.price[i])), font=("Courier", 20))
+    widgets.itembutton[i] = tk.Button(frames.itemcategories[SETTINGS.items.category[i]], text=buttontext, command=partial(onClickItem, SETTINGS.items.name[i], float(SETTINGS.items.price[i])), font=("Courier", 15))
     # figure out position of button widget in current category frame
     currentint = 0
     for j in range(i):
@@ -383,28 +418,27 @@ totalSV = tk.StringVar()
 totalSV.set("0.00 €")
 
 widgets.totalTreeViewItems = ttk.Treeview(frames.total)
-widgets.totalTreeViewItems["columns"]=("Preis", "Anzahl", "Gesamt")
-widgets.totalTreeViewItems.heading("0",  text="Bestellung")
+widgets.totalTreeViewItems["columns"]=("Preis", "Anzahl", "Gesammt")
+widgets.totalTreeViewItems.heading("#0",  text="Bestellung")
 widgets.totalTreeViewItems.heading("Preis", text="Preis", anchor=tk.W)
 widgets.totalTreeViewItems.heading("Anzahl", text="Anzahl", anchor=tk.W)
+widgets.totalTreeViewItems.heading("Gesammt", text="Gesammt")
 widgets.totalTreeViewItems.bind('<<TreeviewSelect>>', onSelectOrder)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
 
-widgets.totalButtonPay = tk.Button(frames.total, text="Spieler abrechnen", command=popupPay)
 widgets.totalButtonStorno = tk.Button(frames.total, text="Buchung stornieren", command=stornoOrder)
 widgets.totalButtonClear = tk.Button(frames.total, text="Auswahl löschen", command=deleteOrder)
 widgets.totalButtonConfirm = tk.Button(frames.total, text="Buchung bestätigen", command=confirmOrder)
 
 widgets.totalTreeViewItems.grid(column=0, row=0, sticky=tk.NSEW)
 widgets.totalLabelSum.grid(column=0, row=1, sticky=tk.NSEW)
-widgets.totalButtonPay.grid(column=0, row=2, sticky=tk.NSEW)
 widgets.totalButtonStorno.grid(column=0, row=3, sticky=tk.NSEW)
 widgets.totalButtonClear.grid(column=0, row=4, sticky=tk.NSEW)
 widgets.totalButtonConfirm.grid(column=0, row=5, sticky=tk.NSEW)
 
-frames.total.rowconfigure(0,weight=1)
-frames.total.columnconfigure(0,weight=1)
+frames.total.rowconfigure(0, weight=1)
+frames.total.columnconfigure(0, weight=1)
 
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Runtime ------------------------------------------------ #
