@@ -277,7 +277,7 @@ def popupPay():
         popPay = tk.Tk()
         popPay.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
         popPay.attributes("-topmost", True)
-        popPay.geometry("%dx%d+%d+%d" % (400, 700, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 150))
+        popPay.geometry("%dx%d+%d+%d" % (400, 400, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 200))
         popPay.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
         # create Listbox
         popListbox = tk.Listbox(popPay)
@@ -435,7 +435,7 @@ for i in range(len(SETTINGS.teamList)):
 # create buttons
 for i in range(len(SETTINGS.teamList)):
     widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, SETTINGS.teamList[i]), value=SETTINGS.teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, bg="orange", height=1, width=1, image=pixel, compound="c")
+    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, bg="orange", height=1, width=1, image=pixel)
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=5, pady=5)
 
 # configure team frame so that contents scale
