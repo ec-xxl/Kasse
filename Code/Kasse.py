@@ -114,15 +114,15 @@ def onSelectOrder(evt):
     displayOrder()
 
 def displayPlayers(team: str):
-    players = widgets.playersTreeView.get_children()
+    players = widgets.playerTreeView.get_children()
     if players != '()':
         for player in players:
-            widgets.playersTreeView.delete(player)  # delete current entries
+            widgets.playerTreeView.delete(player)  # delete current entries
     players = get_players(team)                     # get players of Team
     global displayedPlayers
     displayedPlayers = players
     for player_id, player, is_payed in players:
-        widgets.playersTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
+        widgets.playerTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
     updateTotal()
 
 
@@ -140,9 +140,9 @@ def getSelectedTeam():
 
 def getSelectedPlayerID():
 
-    if widgets.playersTreeView.focus():
-        curPlayer = widgets.playersTreeView.focus()
-        player = widgets.playersTreeView.item(curPlayer)
+    if widgets.playerTreeView.focus():
+        curPlayer = widgets.playerTreeView.focus()
+        player = widgets.playerTreeView.item(curPlayer)
         return int(player.get('tags')[0])
     else:
         popupError("Bitte einen Spieler auswählen")
@@ -407,30 +407,22 @@ ResizeTeamImages()
 # ---------------------------------------------- #
 
 
-widgets.playersTreeView = ttk.Treeview(frames.players)
-widgets.playersTreeView["columns"]=("one")
-widgets.playersTreeView.heading("#0",  text="Spieler")
-widgets.playersTreeView.heading("one", text="Bezahlt", anchor=tk.W)
-widgets.playersTreeView.column("#0", width=100, stretch=1)
-widgets.playersTreeView.column("one", width=20, stretch=1)
+widgets.playerTreeView = ttk.Treeview(frames.players)
+widgets.playerTreeView["columns"]=("one")
+widgets.playerTreeView.heading("#0",  text="Spieler")
+widgets.playerTreeView.heading("one", text="B", anchor=tk.W)
+widgets.playerTreeView.column("#0", width=100, stretch=1)
+widgets.playerTreeView.column("one", width=20, stretch=1)
 
-
-widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer, height=2)
-widgets.playerButtonAdd.grid(row=1, column=0, sticky=tk.NSEW)
-widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer, height=3)
-widgets.playerButtonRename.grid(row=2, column=0, sticky=tk.NSEW)
-widgets.playerButtonPay = tk.Button(frames.players, text="Spieler abrechnen", command=popupPay)
-widgets.playerButtonPay.grid(row=3, column=0, sticky=tk.NSEW)
-#
-# pixel = tk.PhotoImage(width=1, height=1)
-# widgets.playerButtonAdd.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
-# widgets.playerButtonPay.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
-# widgets.playerButtonRename.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
 widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler\n hinzufügen", command=addPlayer)
 widgets.playerButtonRename = tk.Button(frames.players, text="Spieler\n umbenennen", command=renamePlayer)
 widgets.playerButtonPay = tk.Button(frames.players, text="Spieler\n abrechnen", command=popupPay)
 
-widgets.playersTreeView.grid(row=0, column=0, sticky=tk.NSEW)
+widgets.playerButtonAdd.configure(image=pixel, font=("Courier", 20), height=40, compound="c")
+widgets.playerButtonPay.configure(image=pixel, font=("Courier", 20), height=40, compound="c")
+widgets.playerButtonRename.configure(image=pixel, font=("Courier", 20), height=40, compound="c")
+
+widgets.playerTreeView.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
 widgets.playerButtonAdd.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
 widgets.playerButtonPay.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
 widgets.playerButtonRename.grid(row=3, column=0, sticky=tk.NSEW, padx=10, pady=10)
