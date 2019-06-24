@@ -32,13 +32,18 @@ selection = SimpleNamespace()
 # ---------------------------------------------- #
 
 root = tk.Tk()
-
+print(platform.system())
 if platform.system() == "Darwin":
     root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
     root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
     root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
+    root.focus_set()
+else:
+    # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
+    root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     root.focus_set()
 
 # ---------------------------------------------- #
@@ -110,19 +115,24 @@ def onSelectOrder(evt):
     displayOrder()
 
 def displayPlayers(team: str):
-    widgets.playerlistbox.listbox.delete(0, tk.END)
-    players = get_players(team)
+    players = widgets.playersTreeView.get_children()
+    if players != '()':
+        for player in players:
+            widgets.playersTreeView.delete(player)  # delete current entries
+    players = get_players(team)                     # get players of Team
     global displayedPlayers
     displayedPlayers = players
-    for player_id, player in players:
-        widgets.playerlistbox.listbox.insert(tk.END, player)
+    for player_id, player, is_payed in players:
+        widgets.playersTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
+    updateTotal()
+
 
 # ---------------------------------------------- #
 # ------------- Info get ----------------------- #
 # ---------------------------------------------- #
 
 def get_players(team: str):
-    select_player = "SELECT id, player_name FROM players WHERE team_name = ?"
+    select_player = "SELECT id, player_name, is_payed FROM players WHERE team_name = ?"
     players = runQuery(select_player, (team,), receive=tk.TRUE)
     return players
 
@@ -130,9 +140,11 @@ def getSelectedTeam():
     return selectedTeam.get()
 
 def getSelectedPlayerID():
-    if widgets.playerlistbox.listbox.curselection():
-        pos = widgets.playerlistbox.listbox.curselection()[0]
-        return displayedPlayers[pos][0]
+
+    if widgets.playersTreeView.focus():
+        curPlayer = widgets.playersTreeView.focus()
+        player = widgets.playersTreeView.item(curPlayer)
+        return int(player.get('tags')[0])
     else:
         popupError("Bitte einen Spieler auswählen")
 
@@ -159,7 +171,7 @@ def addPlayer():
         e.focus()
         popButton = tk.Button(popup, text="OK", width=10, command=lambda: callback())
         popButton.pack()
-        popup.bind("<Return>", lambda: callback())
+        popup.bind("<Return>", callback)
         popup.mainloop()
     else:
         popupError("Bitte ein Team auswählen")
@@ -332,9 +344,9 @@ for i in range(len(SETTINGS.teamList)):
 
 # create buttons
 for i in range(len(SETTINGS.teamList)):
-    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, SETTINGS.teamList[i]), value=SETTINGS.teamList[i], variable=selectedTeam)
+    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, SETTINGS.teamList[i]), value=SETTINGS.teamList[i], variable=selectedTeam, bg="orange", borderwidth=0)
     pixel = tk.PhotoImage(width=1, height=1)
-    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.FALSE, bg="orange", height=1, width=1, image=pixel, compound="c")
+    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, height=1, width=1, image=pixel, compound="c")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=5, pady=5)
 
 # configure team frame so that contents scale
@@ -361,25 +373,31 @@ ResizeTeamImages()
 #frames.teams.bind("<Configure>", ResizeTeamImages())
 
 # ---------------------------------------------- #
-# -------------Create Players Listbox ---------- #
+# -------------Create Players Treeview --------- #
 # ---------------------------------------------- #
 
-widgets.playerlistbox = ScrolledListbox(frames.players)
-widgets.playerlistbox.listbox.configure(font=("Courier", 30))
 
-widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer)
+widgets.playersTreeView = ttk.Treeview(frames.players)
+widgets.playersTreeView["columns"]=("one")
+widgets.playersTreeView.heading("#0",  text="Spieler")
+widgets.playersTreeView.heading("one", text="Bezahlt", anchor=tk.W)
+widgets.playersTreeView.column("#0", width=100, stretch=1)
+widgets.playersTreeView.column("one", width=20, stretch=1)
+
+
+widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer, height=2)
 widgets.playerButtonAdd.grid(row=1, column=0, sticky=tk.NSEW)
-widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer)
+widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer, height=3)
 widgets.playerButtonRename.grid(row=2, column=0, sticky=tk.NSEW)
 widgets.playerButtonPay = tk.Button(frames.players, text="Spieler abrechnen", command=popupPay)
 widgets.playerButtonPay.grid(row=3, column=0, sticky=tk.NSEW)
+#
+# pixel = tk.PhotoImage(width=1, height=1)
+# widgets.playerButtonAdd.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
+# widgets.playerButtonPay.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
+# widgets.playerButtonRename.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
 
-pixel = tk.PhotoImage(width=1, height=1)
-widgets.playerButtonAdd.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
-widgets.playerButtonPay.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
-widgets.playerButtonRename.configure(image=pixel, font=("Courier", 20), height=30, compound="c")
-
-widgets.playerlistbox.grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=10)
+widgets.playersTreeView.grid(row=0, column=0, sticky=tk.NSEW)
 widgets.playerButtonAdd.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
 widgets.playerButtonPay.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
 widgets.playerButtonRename.grid(row=3, column=0, sticky=tk.NSEW, padx=10, pady=10)
@@ -486,7 +504,7 @@ frames.total.columnconfigure(0,weight=1)
 # -------------------------------------------------------------------------------------------- #
 
 # create Player Table
-create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text)"
+create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text, is_payed integer default 0)"
 runQuery(create_table_players)
 
 # create Order Table
