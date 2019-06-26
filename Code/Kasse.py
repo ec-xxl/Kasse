@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import collections
 import os
 
@@ -26,6 +27,7 @@ widgets = SimpleNamespace()
 assets = SimpleNamespace()
 SETTINGS = SimpleNamespace()
 selection = SimpleNamespace()
+popup = SimpleNamespace()
 
 # ---------------------------------------------- #
 # ------------- Create root window ------------- #
@@ -62,12 +64,12 @@ displayedPlayers = []
 # ---------------------------------------------- #
 
 # show error message
-def popupError(s):
+def popupNotification(s, t, c):
     popupRoot = tk.Tk()
     popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     popupRoot.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
-    popupRoot.after(2000, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
-    popupButton = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg="yellow")
+    popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
+    popupButton = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
     popupButton.pack(expand=1, fill="both")
     popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
     popupRoot.focus_set()
@@ -147,7 +149,7 @@ def getSelectedPlayerID():
         player = widgets.playerTreeView.item(curPlayer)
         return int(player.get('tags')[0])
     else:
-        popupError("Bitte einen Spieler auswählen")
+        popupNotification("Bitte einen Spieler auswählen", 2000, "yellow")
 
 # ---------------------------------------------- #
 # ------------- Button Actions ----------------- #
@@ -157,42 +159,44 @@ def addPlayer():
     def callback(event=None):
         if popEntry.get():
             team = getSelectedTeam()
-            player = popEntry.get()  # This is the text you may want to use later
+            player = popup.PlayerAdd.Widgets.Entry.get()  # This is the text you may want to use later
             insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
             runQuery(insert_player, (player, team))     # add to Database
             displayPlayers(team)    # add to Listbox
-            popupPlayerAdd.destroy()
+            popup.PlayerAdd.root.destroy()
 
     if getSelectedTeam():
+        # create Namespaces
+        popup.PlayerAdd = SimpleNamespace()
+        popup.PlayerAdd.Widgets = SimpleNamespace()
         # create popup window
-        popupPlayerAdd = tk.Tk()
-        popupPlayerAdd.title("Spieler hinzufügen")
-        # popupPlayerAdd.overrideredirect(1)
-        popupPlayerAdd.attributes("-topmost", True)  # Always keep window on top of others
-        popupPlayerAdd.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
-        popupPlayerAdd.focus_set()
+        popup.PlayerAdd.root = tk.Tk()
+        popup.PlayerAdd.root.title("Spieler hinzufügen")
+        popup.PlayerAdd.root.attributes("-topmost", True)  # Always keep window on top of others
+        popup.PlayerAdd.root.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
+        popup.PlayerAdd.root.focus_set()
         # create widgets
-        popLabel = tk.Label(popupPlayerAdd, text="Spieler hinzufügen")
-        popEntry = tk.Entry(popupPlayerAdd, justify='center', font=("Verdana",20))
-        popButtonAbort = tk.Button(popupPlayerAdd, text="Abbrechen", command= lambda: popupPlayerAdd.destroy(), width=1)
-        popButtonOK = tk.Button(popupPlayerAdd, text="OK", font=("Verdana", 20), command=lambda: callback(), width=1)
+        popup.PlayerAdd.Widgets.Label = tk.Label(popup.PlayerAdd.root, text="Spieler hinzufügen")
+        popup.PlayerAdd.Widgets.Entry = tk.Entry(popup.PlayerAdd.root, justify='center', font=("Verdana",20))
+        popup.PlayerAdd.Widgets.ButtonAbort = tk.Button(popup.PlayerAdd.root, text="Abbrechen", command= lambda: popup.PlayerAdd.root.destroy(), width=1)
+        popup.PlayerAdd.Widgets.ButtonOK = tk.Button(popup.PlayerAdd.root, text="OK", font=("Verdana", 20), command=lambda: callback(), width=1)
         # place on grid
-        popLabel.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popEntry.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popButtonAbort.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
-        popButtonOK.grid(row=2, column=1, sticky=tk.NSEW, padx=10, pady=10)
+        popup.PlayerAdd.Widgets.Label.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popup.PlayerAdd.Widgets.Entry.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popup.PlayerAdd.Widgets.ButtonAbort.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
+        popup.PlayerAdd.Widgets.ButtonOK.grid(row=2, column=1, sticky=tk.NSEW, padx=10, pady=10)
         # configure grid
-        popupPlayerAdd.rowconfigure(0, weight=1)
-        popupPlayerAdd.rowconfigure(1, weight=1)
-        popupPlayerAdd.rowconfigure(2, weight=1)
-        popupPlayerAdd.columnconfigure(0, weight=1)
-        popupPlayerAdd.columnconfigure(1, weight=1)
+        popup.PlayerAdd.root.rowconfigure(0, weight=0)
+        popup.PlayerAdd.root.rowconfigure(1, weight=1)
+        popup.PlayerAdd.root.rowconfigure(2, weight=0)
+        popup.PlayerAdd.root.columnconfigure(0, weight=1)
+        popup.PlayerAdd.root.columnconfigure(1, weight=1)
         #
-        popEntry.focus()
-        popupPlayerAdd.bind("<Return>", callback)
-        popupPlayerAdd.mainloop()
+        popup.PlayerAdd.root.focus()
+        popup.PlayerAdd.root.bind("<Return>", callback)
+        popup.PlayerAdd.root.mainloop()
     else:
-        popupError("Bitte ein Team auswählen")
+        popupNotification("Bitte ein Team auswählen", 2000, "yellow")
 
 def renamePlayer():
     def callback(event=None):
@@ -224,9 +228,9 @@ def renamePlayer():
         popButtonAbort.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
         popButtonOK.grid(row=2, column=1, sticky=tk.NSEW, padx=10, pady=10)
         # configure grid
-        popupPlayerRename.rowconfigure(0, weight=1)
+        popupPlayerRename.rowconfigure(0, weight=0)
         popupPlayerRename.rowconfigure(1, weight=1)
-        popupPlayerRename.rowconfigure(2, weight=1)
+        popupPlayerRename.rowconfigure(2, weight=0)
         popupPlayerRename.columnconfigure(0, weight=1)
         popupPlayerRename.columnconfigure(1, weight=1)
         #
@@ -234,7 +238,7 @@ def renamePlayer():
         popupPlayerRename.bind("<Return>", callback)
         popupPlayerRename.mainloop()
     else:
-        popupError("Bitte einen Spieler auswählen")
+        popupNotification("Bitte einen Spieler auswählen", 2000, "yellow")
 
 def confirmOrder():
     global selectedItems
@@ -279,8 +283,10 @@ def popupPay():
         popPay.attributes("-topmost", True)
         popPay.geometry("%dx%d+%d+%d" % (400, 400, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 200))
         popPay.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+        # create frame for treeView and ScrollBar
+        widgets.payFrameTreeView = tk.Frame(popPay, bg="green")
         # create treeview
-        widgets.payTreeView = ttk.Treeview(popPay)
+        widgets.payTreeView = ttk.Treeview(widgets.payFrameTreeView)
         widgets.payTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
         widgets.payTreeView.heading("#0", text="Bestellung")
         widgets.payTreeView.heading("Preis", text="Preis", anchor=tk.W)
@@ -292,6 +298,9 @@ def popupPay():
         widgets.payTreeView.column('Anzahl', width=10, stretch=1)
         widgets.payTreeView.column('Gesamt', width=20, stretch=1)
         widgets.payTreeView.column('Bezahlt', width=10, stretch=1)
+        # scrollbar for tree view
+        widgets.payTreeViewVSB = ttk.Scrollbar(widgets.payFrameTreeView, orient="vertical", command=widgets.payTreeView.yview)
+        widgets.payTreeView.configure(yscrollcommand=widgets.payTreeViewVSB.set)
         # sum up purchases
         select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
@@ -324,7 +333,7 @@ def popupPay():
         popButtonAbort = tk.Button(popPay, text="Abbrechen", command=lambda: popPay.destroy(), width=1)
 
         # place widgets on grid
-        widgets.payTreeView.grid(column=0,row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        widgets.payFrameTreeView.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popLabelDescTotal.grid(column=0, row=1, sticky=tk.EW)
         popLabelDescPaid.grid(column=0, row=2, sticky=tk.EW)
         popLabelDescDue.grid(column=0, row=3, sticky=tk.EW)
@@ -334,6 +343,12 @@ def popupPay():
         popButtonAbort.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popButtonPay.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
 
+        # widgets.payTreeView.grid(column=0,row=0, sticky=tk.NSEW)
+        # widgets.payTreeViewVSB.grid(column=1,row=0, sticky=tk.NSEW)
+
+        widgets.payTreeView.pack(fill="both",side="left",expand=tk.TRUE)
+        widgets.payTreeViewVSB.pack(fill="both",side="right")
+
         # global pixel
         # popButtonPay.config(image=pixel, compound="c", font=("Verdana", 15), height=15)
 
@@ -342,10 +357,10 @@ def popupPay():
         popPay.columnconfigure(0, weight=1)
         popPay.columnconfigure(1, weight=1)
         popPay.rowconfigure(0, weight=1)
-        popPay.rowconfigure(1, weight=1)
-        popPay.rowconfigure(2, weight=1)
-        popPay.rowconfigure(3, weight=1)
-        popPay.rowconfigure(4, weight=1)
+        popPay.rowconfigure(1, weight=0)
+        popPay.rowconfigure(2, weight=0)
+        popPay.rowconfigure(3, weight=0)
+        popPay.rowconfigure(4, weight=0)
 
         popPay.mainloop()
 
@@ -398,7 +413,7 @@ root.columnconfigure(1, weight=0)
 # ------------- Create Subframees -------------- #
 # ---------------------------------------------- #
 
-frames.teams = tk.Frame(frames.main, bg="#999999")
+frames.teams = tk.Frame(frames.main, bg="#C3C3C3")
 frames.players = tk.Frame(frames.main, bg="#FC5252")
 frames.items = tk.Frame(frames.main, bg="#5AAE4A")
 frames.total = tk.Frame(frames.main, bg="#4A98AE")
@@ -442,7 +457,7 @@ for i in range(len(SETTINGS.teamList)):
 # create buttons
 for i in range(len(SETTINGS.teamList)):
     widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, SETTINGS.teamList[i]), value=SETTINGS.teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, bg="#999999", height=1, width=1, image=pixel)
+    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=5, pady=5)
 
 # configure team frame so that contents scale
