@@ -37,9 +37,10 @@ root = tk.Tk()
 if platform.system() == "Darwin":
     root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
-    root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
-    root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
-    root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
+    # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
+    root.geometry("%dx%d+0+0" % (1280, 800) )
+    # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
+    # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
 else:
     # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
@@ -157,7 +158,7 @@ def getSelectedPlayerID():
 
 def addPlayer():
     def callback(event=None):
-        if popEntry.get():
+        if popup.PlayerAdd.Widgets.Entry.get():
             team = getSelectedTeam()
             player = popup.PlayerAdd.Widgets.Entry.get()  # This is the text you may want to use later
             insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
@@ -423,10 +424,10 @@ frames.players.grid(row=0, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
 frames.items.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 frames.total.grid(row=0, column=3, sticky=tk.N+tk.S+tk.E+tk.W)
 
-frames.main.columnconfigure(0, weight=2)
-frames.main.columnconfigure(1, weight=1)
-frames.main.columnconfigure(2, weight=2)
-frames.main.columnconfigure(3, weight=2)
+frames.main.columnconfigure(0, weight=4)
+frames.main.columnconfigure(1, weight=3)
+frames.main.columnconfigure(2, weight=4)
+frames.main.columnconfigure(3, weight=3)
 frames.main.rowconfigure(0, weight=1)
 
 frames.teams.grid_propagate(False)
