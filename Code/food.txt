@@ -1,16 +1,13 @@
-Wurst;2.5;0
 Kuchen;1;0
-Schnitzel;3;0
-Salat groß;3;0
-Salat klein;2;0
-Cola;1;1
-Sprite;1;1
-Brisanti;1;1
-Wasser;1;1
-Longdrink;4;2
-Bier;2;2
-Radler;1.5;2
-Aperol;1.5;2
-Scheibe;12;3
-Sticker;1;3
-Sonstiges;1;3
+Salat kl.;1;0
+Salat gr.;2;0
+Wurst;2;0
+Feta;2.5;0
+Steak;3;0
+Limonade;1;1
+Saft;1;1
+Radler;1.5;1
+Bier;1.5;1
+Shot;1;1
+Longdrink;3;1
+Caipirinha;4;1
