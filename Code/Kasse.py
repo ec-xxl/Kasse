@@ -18,6 +18,17 @@ from PIL import ImageTk
 
 import platform
 
+# TODO
+# - []Info - Feld für jeden Spieler
+# - [] Hauptfenster in Focus nach Meldung(Mac - Problem)
+# - [] Sicherheitsabfrage bei Beenden und Stornieren
+# - [] Popups mit richtigen Labels
+# - [] Tree View Column Width
+# - [] Stornosytem gegebenenfalls überarbeiten
+# - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
+# - [] Scrollbar Breiter
+# - [] Datenbank als CSV exportieren
+
 # ---------------------------------------------- #
 # ------------- Create Namespaces -------------- #
 # ---------------------------------------------- #
@@ -193,7 +204,7 @@ def addPlayer():
         popup.PlayerAdd.root.columnconfigure(0, weight=1)
         popup.PlayerAdd.root.columnconfigure(1, weight=1)
         #
-        popup.PlayerAdd.root.focus()
+        popup.PlayerAdd.Widgets.Entry.focus()
         popup.PlayerAdd.root.bind("<Return>", callback)
         popup.PlayerAdd.root.mainloop()
     else:
