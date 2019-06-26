@@ -32,7 +32,6 @@ selection = SimpleNamespace()
 # ---------------------------------------------- #
 
 root = tk.Tk()
-print(platform.system())
 if platform.system() == "Darwin":
     root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
@@ -453,7 +452,7 @@ for row_num in range(frames.teams.grid_size()[1]):
     frames.teams.rowconfigure(row_num,weight=1)
 
 def ResizeTeamImages():
-    print("resize team image called")
+    # print("resize team image called")
     root.update_idletasks()
     frames.teams.update()
     for i in range(len(SETTINGS.teamList)):
