@@ -11,3 +11,6 @@ Bier;1.5;1
 Shot;1;1
 Longdrink;3;1
 Caipirinha;4;1
+Scheibe;12;2
+Sticker;1;2
+Sonstiges;1;2
