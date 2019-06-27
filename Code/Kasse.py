@@ -19,7 +19,7 @@ from PIL import ImageTk
 import platform
 
 # TODO
-# - []Info - Feld für jeden Spieler
+# - [] Info - Feld für jeden Spieler
 # - [] Hauptfenster in Focus nach Meldung(Mac - Problem)
 # - [] Sicherheitsabfrage bei Beenden und Stornieren
 # - [] Popups mit richtigen Labels
@@ -37,9 +37,6 @@ import platform
 frames = SimpleNamespace()
 widgets = SimpleNamespace()
 assets = SimpleNamespace()
-SETTINGS = SimpleNamespace()
-selection = SimpleNamespace()
-popup = SimpleNamespace()
 
 # ---------------------------------------------- #
 # ------------- Create root window ------------- #
@@ -47,10 +44,10 @@ popup = SimpleNamespace()
 
 root = tk.Tk()
 if platform.system() == "Darwin":
-    # root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
-    root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
     # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
-    root.geometry("%dx%d+0+0" % (1280, 800) )
+    root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
     # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
@@ -78,14 +75,18 @@ displayedPlayers = []
 
 # show error message
 def popupNotification(s, t, c):
-    popupRoot = tk.Tk()
+    # create popup window
+    popupRoot = tk.Toplevel()
+    popupRoot.grab_set() # make this the only accessible window
     popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
-    popupRoot.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.geometry("%dx%d+%d+%d" % (400, 100, popupRoot.winfo_screenwidth()/2 - 200, popupRoot.winfo_screenheight()/2 - 50 ))
     popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
+    popupRoot.focus_set()
+    # create label
     popupMessageLabel = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
     popupMessageLabel.pack(expand=1, fill="both")
-    popupRoot.focus_set()
+    # run
     popupRoot.mainloop()
 
 # SQLite related
@@ -178,8 +179,9 @@ def addPlayer():
 
     if getSelectedTeam():
         # create popup window
-        popupRoot = tk.Tk()
-        # popupPlayerRename.overrideredirect(1)
+        popupRoot = tk.Toplevel()
+        popupRoot.grab_set() # make this the only accessible window
+        # popupRoot.overrideredirect(1)
         popupRoot.title("Spieler hinzufügen")
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
@@ -216,7 +218,7 @@ def renamePlayer():
             update_player = "UPDATE players SET player_name = ? WHERE id = ?"    # SQL-String
             runQuery(update_player, (player_name, playerID))     # add to Database
             displayPlayers(team)    # add to Listbox
-            popup.destroy()
+            popupRoot.destroy()
 
     if getSelectedPlayerID():
         # create popup window
@@ -288,7 +290,7 @@ def popupPay():
         # create window
         popupRoot = tk.Tk()
         popupRoot.title("Bezahlen")
-        popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+        # popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
         popupRoot.attributes("-topmost", True)
         popupRoot.geometry("%dx%d+%d+%d" % (400, 400, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 200))
         popupRoot.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
@@ -391,6 +393,7 @@ pixel = tk.PhotoImage(width=1, height=1)
 
 style = ttk.Style()
 style.configure("Treeview", font=("Verdana", 20), rowheight=45)
+style.configure("Treeview.Heading", font=("Verdana", 15), rowheight=30)
 
 # ---------------------------------------------- #
 # ------------- Create Main Frames ------------- #
@@ -399,33 +402,49 @@ style.configure("Treeview", font=("Verdana", 20), rowheight=45)
 frames.main = tk.Frame(root, bg="red")
 frames.statusbar = tk.Frame(root, bg="#DBDF31")
 
-frames.main.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-frames.statusbar.grid(row=1,column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+frames.main.grid(row=0, column=0, sticky=tk.NSEW)
+frames.statusbar.grid(row=1,column=0, sticky=tk.NSEW)
 
 root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=0, minsize=40)
 root.columnconfigure(0, weight=1)
-root.columnconfigure(1, weight=0)
+
+# ---------------------------------------------- #
+# ------------- Left and Right main frames ----- #
+# ---------------------------------------------- #
+
+frames.mainLeft = tk.Frame(frames.main, bg="pink")
+frames.mainRight = tk.Frame(frames.main, bg="orange")
+
+frames.mainLeft.grid(row=0, column=0, sticky=tk.NSEW)
+frames.mainRight.grid(row=0, column=1, sticky=tk.NSEW)
+
+frames.main.columnconfigure(0, weight=1)
+frames.main.columnconfigure(1, weight=1)
+frames.main.rowconfigure(0, weight=1)
 
 # ---------------------------------------------- #
 # ------------- Create Subframees -------------- #
 # ---------------------------------------------- #
 
-frames.teams = tk.Frame(frames.main, bg="#C3C3C3")
-frames.players = tk.Frame(frames.main, bg="#FC5252")
-frames.items = tk.Frame(frames.main, bg="#5AAE4A")
-frames.total = tk.Frame(frames.main, bg="#4A98AE")
+frames.teams = tk.Frame(frames.mainLeft, bg="#C3C3C3")
+frames.players = tk.Frame(frames.mainLeft, bg="#FC5252")
+frames.items = tk.Frame(frames.mainRight, bg="#5AAE4A")
+frames.total = tk.Frame(frames.mainRight, bg="#4A98AE")
 
-frames.teams.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-frames.players.grid(row=0, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
-frames.items.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
-frames.total.grid(row=0, column=3, sticky=tk.N+tk.S+tk.E+tk.W)
+frames.teams.grid(row=0, column=0, sticky=tk.NSEW)
+frames.players.grid(row=0, column=1, sticky=tk.NSEW)
 
-frames.main.columnconfigure(0, weight=4)
-frames.main.columnconfigure(1, weight=3)
-frames.main.columnconfigure(2, weight=4)
-frames.main.columnconfigure(3, weight=3)
-frames.main.rowconfigure(0, weight=1)
+frames.items.grid(row=0, column=0, sticky=tk.NSEW)
+frames.total.grid(row=1, column=0, sticky=tk.NSEW)
+
+frames.mainLeft.columnconfigure(0, weight=1)
+frames.mainLeft.columnconfigure(1, weight=1)
+frames.mainLeft.rowconfigure(0, weight=1)
+
+frames.mainRight.rowconfigure(0, weight=1)
+frames.mainRight.rowconfigure(1, weight=1)
+frames.mainRight.columnconfigure(0, weight=1)
 
 frames.teams.grid_propagate(False)
 frames.players.grid_propagate(False)
@@ -443,19 +462,19 @@ assets.teamimageResizeOn  = {}
 assets.teamimageResizeOff = {}
 
 f = open("teams.txt", "r")
-SETTINGS.teamList = f.readlines()
+teamList = f.readlines()
 f.close()
-SETTINGS.teamList = list(map(str.strip, SETTINGS.teamList))
+teamList = list(map(str.strip, teamList))
 
 # load team images and store
-for i in range(len(SETTINGS.teamList)):
-    assets.teamimageOn[i] = Image.open("Logo_" + SETTINGS.teamList[i] + "_On.gif")
-    assets.teamimageOff[i] = Image.open("Logo_" + SETTINGS.teamList[i] + "_Off.gif")
+for i in range(len(teamList)):
+    assets.teamimageOn[i] = Image.open("Logo_" + teamList[i] + "_On.gif")
+    assets.teamimageOff[i] = Image.open("Logo_" + teamList[i] + "_Off.gif")
 
 # create buttons
-for i in range(len(SETTINGS.teamList)):
-    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, SETTINGS.teamList[i]), value=SETTINGS.teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=SETTINGS.teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3")
+for i in range(len(teamList)):
+    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, teamList[i]), value=teamList[i], variable=selectedTeam)
+    widgets.teambuttons[i].configure(text=teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=5, pady=5)
 
 # configure team frame so that contents scale
@@ -468,7 +487,7 @@ def ResizeTeamImages():
     # print("resize team image called")
     root.update_idletasks()
     frames.teams.update()
-    for i in range(len(SETTINGS.teamList)):
+    for i in range(len(teamList)):
         teamimagesize = min(widgets.teambuttons[i].winfo_height(), widgets.teambuttons[i].winfo_width())
         # resize images
         assets.teamimageResizeOn[i] = ImageTk.PhotoImage(assets.teamimageOn[i].resize( (teamimagesize, teamimagesize), resample=Image.LANCZOS))
@@ -520,10 +539,10 @@ frames.players.columnconfigure(0,weight=1)
 # -------------fill item frame ----------------- #
 # ---------------------------------------------- #
 
-SETTINGS.items = SimpleNamespace()
-SETTINGS.items.name = []
-SETTINGS.items.price = []
-SETTINGS.items.category = []
+items = SimpleNamespace()
+items.name = []
+items.price = []
+items.category = []
 
 frames.itemcategories = {}
 widgets.itembutton = {}
@@ -533,35 +552,37 @@ f = open("food.txt", "r")
 foodList = f.readlines()
 f.close()
 
+itemsPerRow = 4
+
 for i in range(len(foodList)):
     [name, price, category] = foodList[i].strip().split(";")
-    SETTINGS.items.name.append(name)
-    SETTINGS.items.price.append(price)
-    SETTINGS.items.category.append(int(category))
+    items.name.append(name)
+    items.price.append(price)
+    items.category.append(int(category))
 
 # create category containers
-for i in range(len(set(SETTINGS.items.category))):
+for i in range(len(set(items.category))):
     #create frames and put onto grid
     frames.itemcategories[i] = tk.Frame(frames.items, bg="#71C968")
     frames.itemcategories[i].grid(column=0, row=i, sticky=tk.NSEW, padx=10, pady=10)
     #calc needed weight for each frame
-    rowweight = math.ceil(SETTINGS.items.category.count(sorted(set(SETTINGS.items.category))[i]) / 3)
+    rowweight = math.ceil(items.category.count(sorted(set(items.category))[i]) / itemsPerRow)
     #configure with correct weight
     frames.items.rowconfigure(i,weight=rowweight)
     frames.items.columnconfigure(0,weight=1)
 
 # create item buttons
-for i in range(len(SETTINGS.items.name)):
-    widgets.itembutton[i] = tk.Button(frames.itemcategories[SETTINGS.items.category[i]], command=partial(onClickItem, SETTINGS.items.name[i], float(SETTINGS.items.price[i])))
-    buttontext = SETTINGS.items.name[i] + "\n" + str(SETTINGS.items.price[i]) + "€"
+for i in range(len(items.name)):
+    widgets.itembutton[i] = tk.Button(frames.itemcategories[items.category[i]], command=partial(onClickItem, items.name[i], float(items.price[i])))
+    buttontext = items.name[i] + "\n" + str(items.price[i]) + "€"
     widgets.itembutton[i].config(image=pixel, compound="c", text=buttontext, font=("Verdana", 15), width=1, highlightbackground="#44793E")
     # figure out position of button widget in current category frame
     currentint = 0
     for j in range(i):
-        if SETTINGS.items.category[j] == SETTINGS.items.category[i]:
+        if items.category[j] == items.category[i]:
             currentint = currentint +1
     # place widget in category frame
-    widgets.itembutton[i].grid(row=(currentint)//3, column=(currentint)%3, sticky=tk.NSEW, pady=10, padx=10)
+    widgets.itembutton[i].grid(row=(currentint)//itemsPerRow, column=(currentint)%itemsPerRow, sticky=tk.NSEW, pady=10, padx=10)
 
 for i in range(len(frames.itemcategories)):
     for j in range(frames.itemcategories[i].grid_size()[0]):
@@ -594,27 +615,30 @@ widgets.totalTreeViewItemsVSB = ttk.Scrollbar(frames.totalTreeViewFrame,orient="
 widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
-widgets.totalLabelSum.configure(image=pixel, font=("Verdana", 30), relief="sunken", height=70, compound="c")
-
 widgets.totalButtonClear = tk.Button(frames.total, text="Auswahl löschen", command=deleteOrder, highlightbackground="#307F95")
-widgets.totalButtonStorno = tk.Button(frames.total, text="Buchung stornieren", command=stornoOrder, highlightbackground="#307F95")
-widgets.totalButtonConfirm = tk.Button(frames.total, text="Buchung bestätigen", command=confirmOrder, highlightbackground="#307F95")
+widgets.totalButtonStorno = tk.Button(frames.total, text="Auswahl stornieren", command=stornoOrder, highlightbackground="#307F95")
+widgets.totalButtonConfirm = tk.Button(frames.total, text="Buchung\nbestätigen", command=confirmOrder, highlightbackground="#307F95")
 
-widgets.totalButtonClear.configure(image=pixel, compound="c", font=("Verdana", 15), height=30)
-widgets.totalButtonStorno.configure(image=pixel, compound="c", font=("Verdana", 15), height=30)
-widgets.totalButtonConfirm.configure(image=pixel, compound="c", font=("Verdana", 30), height=70)
+widgets.totalLabelSum.configure(image=pixel, font=("Verdana", 20), relief="sunken", height=70, compound="c", width=1)
+widgets.totalButtonClear.configure(image=pixel, compound="c", font=("Verdana", 15), height=30, width=1)
+widgets.totalButtonStorno.configure(image=pixel, compound="c", font=("Verdana", 15), height=30, width=1)
+widgets.totalButtonConfirm.configure(image=pixel, compound="c", font=("Verdana", 20), height=70, width=1)
 
-frames.totalTreeViewFrame.grid(column=0, row=0, sticky=tk.NSEW, padx=10, pady=10)
-widgets.totalLabelSum.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
-widgets.totalButtonClear.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
-widgets.totalButtonStorno.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
-widgets.totalButtonConfirm.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
+frames.totalTreeViewFrame.grid(column=0, row=0, rowspan=4, sticky=tk.NSEW, padx=10, pady=10)
+widgets.totalLabelSum.grid(column=1, row=0, sticky=tk.NSEW, padx=10, pady=10)
+widgets.totalButtonClear.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
+widgets.totalButtonStorno.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
+widgets.totalButtonConfirm.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
 
 widgets.totalTreeViewItems.pack(fill="both",side="left",expand=tk.TRUE)
 widgets.totalTreeViewItemsVSB.pack(fill="both",side="right")
 
 frames.total.rowconfigure(0,weight=1)
+frames.total.rowconfigure(1,weight=1)
+frames.total.rowconfigure(2,weight=1)
+frames.total.rowconfigure(3,weight=1)
 frames.total.columnconfigure(0,weight=1)
+frames.total.columnconfigure(1,weight=1)
 
 # ---------------------------------------------- #
 # -------------fill status bar ----------------- #
