@@ -19,26 +19,20 @@ from PIL import ImageTk
 import platform
 
 # TODO
-# - [] Info - Feld für jeden Spieler
 # - [x] Hauptfenster in Focus nach Meldung(Mac - Problem)
-# - [] Sicherheitsabfrage bei Beenden und Stornieren
+# - [x] Sicherheitsabfrage bei Beenden und Stornieren
 # - [x] Popups mit richtigen Labels
 # - [x] Tree View Column Width
+# - [x] Bestätigung nach erfolgreicher Buchung
+# - [x] Buchung nur ermöglichen, wenn auch Artikel gewählt sind!
+# - [x] evtl hintergundfenster blockieren
+# - [x] Summe anzeigen und Abrechnen nach unten
 # - [] Stornosytem gegebenenfalls überarbeiten
+# - [] Info - Feld für jeden Spieler
+# - [] Datenbank als CSV exportieren
 # - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
 # - [] Scrollbar Breiter
-# - [] Datenbank als CSV exportieren
-# - [x] evtl hintergundfenster blockieren
-# - [] Summe anzeigen und Abrechnen nach unten
 # - [] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
-
-# ---------------------------------------------- #
-# ------------- Create Namespaces -------------- #
-# ---------------------------------------------- #
-
-frames = SimpleNamespace()
-widgets = SimpleNamespace()
-assets = SimpleNamespace()
 
 # ---------------------------------------------- #
 # ------------- Create root window ------------- #
@@ -61,42 +55,93 @@ else:
     root.focus_set()
 
 # ---------------------------------------------- #
+# ------------- Create Namespaces -------------- #
+# ---------------------------------------------- #
+
+frames = SimpleNamespace()
+widgets = SimpleNamespace()
+assets = SimpleNamespace()
+settings = SimpleNamespace()
+
+# ---------------------------------------------- #
 # ------------- global variables --------------- #
 # ---------------------------------------------- #
 
 selectedTeam = tk.StringVar()
-selectedItems = collections.OrderedDict()
 displayedPlayers = []
+selectedItems = collections.OrderedDict()
+
+totalSV = tk.StringVar()
+totalSV.set("Summe:\n0.00 €")
 
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Functions ---------------------------------------------- #
 # -------------------------------------------------------------------------------------------- #
 
 # ---------------------------------------------- #
-# ------------- General ------------------------ #
+# ------------- General Popups ----------------- #
 # ---------------------------------------------- #
 
 # show error message
-def popupNotification(s, t, c):
+def popupNotification(parent, s, t, c):
     # create popup window
     popupRoot = tk.Toplevel()
     popupRoot.title("!")
-    # popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set() # make this the only accessible window
     popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
     # create label
-    popupMessageLabel = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
-    popupMessageLabel.pack(expand=1, fill="both")
-    # run
-    popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 2000 = 2 seconds
-    popupRoot.mainloop()
+    popupWidgetLabelMsg = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
+    popupWidgetLabelMsg.pack(expand=1, fill="both")
+    # bind
+    popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 1000 = 1 seconds
+    # make parent window wait
+    parent.wait_window(popupRoot)
 
-# SQLite related
+def popupQuestionYESNO(parent, message, title, colour):
+    popupReturnVar = tk.IntVar()
+    def setAnswer(value):
+        popupReturnVar.set(value)
+        popupRoot.destroy()
+    # create popup window
+    popupRoot = tk.Toplevel(background=colour)
+    popupRoot.title(title)
+    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+    popupRoot.focus_set()
+    popupRoot.grab_set() # make this the only accessible window
+    popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
+    # create widgets
+    popupWidgetLabelMsg = tk.Label(popupRoot, text=message)
+    popupWidgetButtonNo = tk.Button(popupRoot, text="Nein", command=lambda *args: setAnswer(0) )
+    popupWidgetButtonYes = tk.Button(popupRoot, text="Ja", command=lambda *args: setAnswer(1) )
+    # configure widgets
+    popupPixel = tk.PhotoImage(width=1, height=1)
+    popupWidgetLabelMsg.configure(image=pixel, compound="center", font=("Verdana", 20), width=1, height=1, highlightbackground=colour, background=colour)
+    popupWidgetButtonNo.configure(image=pixel, compound="center", font=("Verdana", 20), width=1, height=1, highlightbackground=colour)
+    popupWidgetButtonYes.configure(image=pixel, compound="center", font=("Verdana", 20), width=1, height=1, highlightbackground=colour)
+    # place widgets
+    popupWidgetLabelMsg.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+    popupWidgetButtonNo.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
+    popupWidgetButtonYes.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
+    # configure grid
+    popupRoot.columnconfigure(0, weight=1)
+    popupRoot.columnconfigure(1, weight=1)
+    popupRoot.rowconfigure(0, weight=1)
+    popupRoot.rowconfigure(1, weight=1)
+    # make parent window wait for desctruction
+    parent.wait_window(popupRoot)
+    return popupReturnVar.get()
+
+# ---------------------------------------------- #
+# ------------- SQLite Database access --------- #
+# ---------------------------------------------- #
+
 def runQuery(sql, data=None, receive=False):
-    conn = sqlite3.connect("kasse.db")
-    cursor = conn.cursor()
+    connection = sqlite3.connect("kasse.db")
+    cursor = connection.cursor()
     if data:
         cursor.execute(sql, data)
     else:
@@ -105,23 +150,29 @@ def runQuery(sql, data=None, receive=False):
     if receive:
         return cursor.fetchall()
     else:
-        conn.commit()
-    conn.close()
+        connection.commit()
+    connection.close()
 
-def closeRegister():
-    root.destroy()
+# create Player Table
+create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text, is_payed integer default 0)"
+runQuery(create_table_players)
+
+# create Order Table
+create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0)"
+runQuery(create_table_order)
+
 # ---------------------------------------------- #
 # ------------- Selection Actions -------------- #
 # ---------------------------------------------- #
 
 def onSelectTeam(team):
-    displayPlayers(team)
+    playerDisplay(team)
 
 def onClickItem(name: str, price:float):
     if (name, price) not in selectedItems:
         selectedItems[(name, price)] = 0
     selectedItems[(name, price)] += 1
-    displayOrder()
+    orderDisplay()
 
 def onSelectOrder(evt):
     global selectedItems
@@ -132,25 +183,13 @@ def onSelectOrder(evt):
     selectedItems[key] = quantity
     if quantity == 0:
         del selectedItems[key]
-    displayOrder()
-
-def displayPlayers(team):
-    players = widgets.playerTreeView.get_children()
-    if players != '()':
-        for player in players:
-            widgets.playerTreeView.delete(player)  # delete current entries
-    players = get_players(team)                     # get players of Team
-    global displayedPlayers
-    displayedPlayers = players
-    for player_id, player, is_payed in players:
-        widgets.playerTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
-    updateTotal()
+    orderDisplay()
 
 # ---------------------------------------------- #
 # ------------- Info get ----------------------- #
 # ---------------------------------------------- #
 
-def get_players(team: str):
+def getPlayers(team: str):
     select_player = "SELECT id, player_name, is_payed FROM players WHERE team_name = ?"
     players = runQuery(select_player, (team,), receive=tk.TRUE)
     return players
@@ -164,56 +203,73 @@ def getSelectedPlayerID():
         player = widgets.playerTreeView.item(curPlayer)
         return int(player.get('tags')[0])
     else:
-        popupNotification("Bitte einen Spieler auswählen", 2000, "yellow")
+        popupNotification(root, "Bitte einen Spieler auswählen", 1000, "yellow")
 
 # ---------------------------------------------- #
-# ------------- Button Actions ----------------- #
+# ------------- Player Button Actions ---------- #
 # ---------------------------------------------- #
 
-def addPlayer():
+def playerDisplay(team):
+    players = widgets.playerTreeView.get_children()
+    if players != '()':
+        for player in players:
+            widgets.playerTreeView.delete(player)  # delete current entries
+    players = getPlayers(team)                     # get players of Team
+    global displayedPlayers
+    displayedPlayers = players
+    for player_id, player, is_payed in players:
+        widgets.playerTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
+    orderUpdateTotal()
+
+def playerAdd(parent):
     def callback(event=None):
         if popupWidgetEntry.get():
             team = getSelectedTeam()
             player = popupWidgetEntry.get()  # This is the text you may want to use later
             insert_player = "INSERT INTO players (player_name, team_name) VALUES (?, ?)"    # SQL-String
             runQuery(insert_player, (player, team))     # add to Database
-            displayPlayers(team)    # add to Listbox
+            playerDisplay(team)    # add to Listbox
             popupRoot.destroy()
 
     if getSelectedTeam():
         # create popup window
         popupRoot = tk.Toplevel()
-        # popupRoot.overrideredirect(1)
         popupRoot.title("Spieler hinzufügen")
+        # popupRoot.overrideredirect(1)
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # create widgets
-        popupPixel = tk.PhotoImage(width=1, height=1)
         popupWidgetLabel = tk.Label(popupRoot, text="Spieler hinzufügen")
-        popupWidgetEntry = tk.Entry(popupRoot, justify='center', font=("Verdana",20))
-        popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command= lambda: popupRoot.destroy(), image=popupPixel, compound="center", width=1)
-        popupWidgetButtonOK = tk.Button(popupRoot, text="OK", font=("Verdana",20), command=lambda: callback(), image=popupPixel, compound="center", width=1)
+        popupWidgetEntry = tk.Entry(popupRoot)
+        popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy())
+        popupWidgetButtonOK = tk.Button(popupRoot, text="OK", command=lambda: callback())
+        # configure widgets
+        popupPixel = tk.PhotoImage(width=1, height=1)
+        popupWidgetLabel.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
+        popupWidgetEntry.configure(justify='center', font=(None,20), width=1)
+        popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
+        popupWidgetButtonOK.configure(image=popupPixel, compound="center", font=(None,20), width=1, height=1)
         # place on grid
         popupWidgetLabel.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetEntry.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetButtonAbort.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetButtonOK.grid(row=2, column=1, sticky=tk.NSEW, padx=10, pady=10)
         # configure grid
-        popupRoot.rowconfigure(0, weight=0)
-        popupRoot.rowconfigure(1, weight=1)
-        popupRoot.rowconfigure(2, weight=0)
+        popupRoot.rowconfigure(0, weight=1)
+        popupRoot.rowconfigure(1, weight=2)
+        popupRoot.rowconfigure(2, weight=2)
         popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
         #
         popupWidgetEntry.focus()
         popupRoot.bind("<Return>", callback)
-        popupRoot.mainloop()
+        parent.wait_window(popupRoot) # make parent window wait
     else:
-        popupNotification("Bitte ein Team auswählen", 2000, "yellow")
+        popupNotification(root, "Bitte ein Team auswählen", 1000, "yellow")
 
-def renamePlayer():
+def playerRename(parent):
     def callback(event=None):
         if popupWidgetEntry.get():
             team = getSelectedTeam()
@@ -221,7 +277,7 @@ def renamePlayer():
             player_name = popupWidgetEntry.get()  # Entry of new name
             update_player = "UPDATE players SET player_name = ? WHERE id = ?"    # SQL-String
             runQuery(update_player, (player_name, playerID))     # add to Database
-            displayPlayers(team)    # add to Listbox
+            playerDisplay(team)    # add to Listbox
             popupRoot.destroy()
 
     if getSelectedPlayerID():
@@ -233,145 +289,36 @@ def renamePlayer():
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # create widgets
-        popupPixel = tk.PhotoImage(width=1, height=1)
         popupWidgetLabel = tk.Label(popupRoot, text="Spieler umbenennen")
-        popupWidgetEntry = tk.Entry(popupRoot, justify='center', font=("Verdana",20))
-        popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command= lambda: popupRoot.destroy(), image=popupPixel, compound="center", width=1)
-        popupWidgetButtonOK = tk.Button(popupRoot, text="OK", font=("Verdana",20), command=lambda: callback(), image=popupPixel, compound="center", width=1)
+        popupWidgetEntry = tk.Entry(popupRoot)
+        popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy())
+        popupWidgetButtonOK = tk.Button(popupRoot, text="OK", command=lambda: callback())
+        # configure widgets
+        popupPixel = tk.PhotoImage(width=1, height=1)
+        popupWidgetLabel.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
+        popupWidgetEntry.configure(justify='center', font=(None,20), width=1)
+        popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
+        popupWidgetButtonOK.configure(image=popupPixel, compound="center", font=(None,20), width=1, height=1)
         # place on grid
         popupWidgetLabel.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetEntry.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetButtonAbort.grid(row=2, column=0, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetButtonOK.grid(row=2, column=1, sticky=tk.NSEW, padx=10, pady=10)
         # configure grid
-        popupRoot.rowconfigure(0, weight=0)
-        popupRoot.rowconfigure(1, weight=1)
-        popupRoot.rowconfigure(2, weight=0)
+        popupRoot.rowconfigure(0, weight=1)
+        popupRoot.rowconfigure(1, weight=2)
+        popupRoot.rowconfigure(2, weight=2)
         popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
         #
         popupWidgetEntry.focus()
         popupRoot.bind("<Return>", callback)
-        popupRoot.mainloop()
+        #
+        parent.wait_window(popupRoot) # make parent window wait
     else:
-        popupNotification("Bitte einen Spieler auswählen", 2000, "yellow")
+        popupNotification(root, "Bitte einen Spieler auswählen", 1000, "yellow")
 
-def confirmOrder():
-    global selectedItems
-    player_id = getSelectedPlayerID()
-    if player_id:
-        for item in selectedItems:
-            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
-            data = (player_id, item[0], item[1], selectedItems[item], 0)
-            runQuery(insert_order, data)
-        set_payed = "UPDATE players SET is_payed=0 WHERE id = ?"
-        runQuery(set_payed, (player_id,))
-        selectedItems = {}
-        selectedTeam.set("")        # Unselect Team
-        displayPlayers("")          # Show empty Player List
-        displayOrder()
-
-def stornoOrder():
-    global selectedItems
-    player_id = getSelectedPlayerID()
-    if player_id:
-        for item in selectedItems:
-            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
-            data = (player_id, item[0], -item[1], selectedItems[item], 0)
-            runQuery(insert_order, data)
-        selectedItems = {}
-        selectedTeam.set("")        # Unselect Team
-        displayPlayers("")          # Show empty Player List
-        displayOrder()
-
-def deleteOrder():
-    global selectedItems
-    selectedItems = collections.OrderedDict()
-    displayOrder()
-
-def popupPay():
-    playerID = getSelectedPlayerID()
-    if playerID:
-        # create window
-        popupRoot = tk.Toplevel()
-        popupRoot.title("Spieler Abrechnen")
-        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-        popupRoot.focus_set()
-        popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
-        # create frame for treeView and ScrollBar
-        popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
-        # create treeview
-        popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame)
-        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
-        popupWidgetTreeView.heading("#0", text="Bestellung")
-        popupWidgetTreeView.heading("Preis", text="Preis", anchor=tk.W)
-        popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
-        popupWidgetTreeView.heading("Gesamt", text="Gesamt")
-        popupWidgetTreeView.heading("Bezahlt", text="Bezahlt")
-        popupWidgetTreeView.column('#0', width=100, stretch=1)
-        popupWidgetTreeView.column('Preis', width=20, stretch=1)
-        popupWidgetTreeView.column('Anzahl', width=10, stretch=1)
-        popupWidgetTreeView.column('Gesamt', width=20, stretch=1)
-        popupWidgetTreeView.column('Bezahlt', width=10, stretch=1)
-        # scrollbar for tree view
-        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
-        popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
-        # sum up purchases
-        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
-        purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
-        total_payed = 0
-        total_due = 0
-        for purchase in purchases:
-            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
-            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
-            total_payed += (purchase[1]*purchase[2]) if purchase[3] else 0
-        total = total_due+total_payed
-        # run SQL query
-        def deduction():
-            pay_purchases = "UPDATE purchases SET is_payed = 1 WHERE player_id = ?"
-            runQuery(pay_purchases, (playerID,))
-            set_payed = "UPDATE players SET is_payed = 1 WHERE id = ?"
-            runQuery(set_payed, (playerID,))
-            displayPlayers(getSelectedTeam())
-            popupRoot.destroy()
-        # create labels
-        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:", anchor="e", width=1)
-        popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:", anchor="e", width=1)
-        popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:", anchor="e", font=(None, 15, "bold"), width=1)
-        popupWidgetLabelTotal = tk.Label(popupRoot, text="%.2f€" % total, anchor="w", width=1)
-        popupWidgetLabelPaid = tk.Label(popupRoot, text="%.2f€" % total_payed, anchor="w", width=1)
-        popupWidgetLabelDue = tk.Label(popupRoot, text="%.2f€" % total_due, anchor="w", font=(None, 15, "bold"), width=1)
-        # create buttons
-        popupPixel = tk.PhotoImage(width=1, height=1)
-        popupWidgetButtonPay = tk.Button(popupRoot, text="Bezahlen", command=deduction, image=popupPixel, compound="center", width=1)
-        popupWidgetLabelAbort = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy(), image=popupPixel, compound="center", width=1)
-        # place widgets on grid
-        popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.EW)
-        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.EW)
-        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.EW)
-        popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.EW)
-        popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.EW)
-        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.EW)
-        popupWidgetLabelAbort.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonPay.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
-        popupWidgetTreeViewVSB.pack(fill="both",side="right")
-        # configure button
-        popupWidgetButtonPay.config(font=("Verdana", 20))
-        # configure grid
-        popupRoot.columnconfigure(0, weight=1)
-        popupRoot.columnconfigure(1, weight=1)
-        popupRoot.rowconfigure(0, weight=1)
-        popupRoot.rowconfigure(1, weight=0)
-        popupRoot.rowconfigure(2, weight=0)
-        popupRoot.rowconfigure(3, weight=0)
-        popupRoot.rowconfigure(4, weight=0)
-        # mainloop
-        popupRoot.mainloop()
-
-def popupShowSum():
+def playerShowSum(parent):
     playerID = getSelectedPlayerID()
     if playerID:
         # create window
@@ -384,13 +331,15 @@ def popupShowSum():
         # create frame for treeView and ScrollBar
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
-        popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame)
+        popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
         popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        # rename treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
         popupWidgetTreeView.heading("Preis", text="Preis", anchor=tk.W)
         popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
         popupWidgetTreeView.heading("Gesamt", text="Gesamt")
         popupWidgetTreeView.heading("Bezahlt", text="Bezahlt")
+        # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=1)
         popupWidgetTreeView.column('Preis', width=20, stretch=1)
         popupWidgetTreeView.column('Anzahl', width=10, stretch=1)
@@ -399,70 +348,224 @@ def popupShowSum():
         # scrollbar for tree view
         popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
+        # create widgets
+        popupSVTotalSum = tk.StringVar()
+        popupSVTotalPaid = tk.StringVar()
+        popupSVTotalDue = tk.StringVar()
+        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:")
+        popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
+        popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:")
+        popupWidgetLabelTotal = tk.Label(popupRoot, textvariable=popupSVTotalSum)
+        popupWidgetLabelPaid = tk.Label(popupRoot, textvariable=popupSVTotalPaid)
+        popupWidgetLabelDue = tk.Label(popupRoot, textvariable=popupSVTotalDue)
+        popupWidgeButtonOK = tk.Button(popupRoot, text="OK", command=popupRoot.destroy)
+        # configure widgets
+        popupPixel = tk.PhotoImage(width=1, height=1)
+        popupWidgetDescTotal.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1)
+        popupWidgetDescPaid.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1)
+        popupWidgetDescDue.configure(image=popupPixel, compound="center", anchor="e", font=(None, 20, "bold"), width=1, height=1)
+        popupWidgetLabelTotal.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1)
+        popupWidgetLabelPaid.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1)
+        popupWidgetLabelDue.configure(image=popupPixel, compound="center", anchor="w", font=(None, 20, "bold"), width=1, height=1)
+        popupWidgeButtonOK.configure(image=popupPixel, compound="center", font=(None, 20), width=1, height=1)
+        # place widgets on grid
+        popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgeButtonOK.grid(column=0, row=4, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        # use pack for treeview and vsb
+        popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
+        popupWidgetTreeViewVSB.pack(fill="both",side="right")
+        # configure grid
+        popupRoot.rowconfigure(0, weight=30)
+        popupRoot.rowconfigure(1, weight=1)
+        popupRoot.rowconfigure(2, weight=1)
+        popupRoot.rowconfigure(3, weight=1)
+        popupRoot.rowconfigure(4, weight=2)
+        popupRoot.columnconfigure(0, weight=1)
+        popupRoot.columnconfigure(1, weight=1)
         # sum up purchases
         select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
-        total_payed = 0
+        total_paid = 0
         total_due = 0
         for purchase in purchases:
             popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
             total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
-            total_payed += (purchase[1]*purchase[2]) if purchase[3] else 0
-        total = total_due+total_payed
-        # create labels
-        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:", anchor="e", width=1)
-        popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:", anchor="e", width=1)
-        popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:", anchor="e", font=(None, 15, "bold"), width=1)
-        popupWidgetLabelTotal = tk.Label(popupRoot, text="%.2f€" % total, anchor="w", width=1)
-        popupWidgetLabelPaid = tk.Label(popupRoot, text="%.2f€" % total_payed, anchor="w", width=1)
-        popupWidgetLabelDue = tk.Label(popupRoot, text="%.2f€" % total_due, anchor="w", font=(None, 15, "bold"), width=1)
-        # create buttons
-        popupPixel = tk.PhotoImage(width=1, height=1)
-        popupWidgetLabelOK = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy(), image=popupPixel, compound="center", width=1)
-        # place widgets on grid
-        popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.EW)
-        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.EW)
-        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.EW)
-        popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.EW)
-        popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.EW)
-        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.EW)
-        popupWidgetLabelAbort.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetLabelOK.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
-        popupWidgetTreeViewVSB.pack(fill="both",side="right")
-        # configure button
-        popupWidgetLabelOK.config(font=("Verdana", 20))
-        # configure grid
-        popupRoot.columnconfigure(0, weight=1)
-        popupRoot.columnconfigure(1, weight=1)
-        popupRoot.rowconfigure(0, weight=1)
-        popupRoot.rowconfigure(1, weight=0)
-        popupRoot.rowconfigure(2, weight=0)
-        popupRoot.rowconfigure(3, weight=0)
-        popupRoot.rowconfigure(4, weight=0)
-        # mainloop
-        popupRoot.mainloop()
+            total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
+        total = total_due+total_paid
+        popupSVTotalSum.set("%.2f €" % total)
+        popupSVTotalPaid.set("%.2f €" % total_paid)
+        popupSVTotalDue.set("%.2f €" % total_due)
+        # run
+        parent.wait_window(popupRoot) # make parent window wait
 
 # ---------------------------------------------- #
-# ------------- Manage Order View -------------- #
+# ------------- Order Button Actions ----------- #
 # ---------------------------------------------- #
 
-def displayOrder():
+def orderConfirm():
+    global selectedItems
+    player_id = getSelectedPlayerID()
+    if player_id:
+        if selectedItems:
+            for item in selectedItems:
+                insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
+                data = (player_id, item[0], item[1], selectedItems[item], 0)
+                runQuery(insert_order, data)
+            set_payed = "UPDATE players SET is_payed=0 WHERE id = ?"
+            runQuery(set_payed, (player_id,))
+            selectedItems = {}
+            selectedTeam.set("")        # Unselect Team
+            playerDisplay("")          # Show empty Player List
+            orderDisplay()
+            popupNotification(root, "Buchung durchgeführt", 1000, "green")
+        else:
+            popupNotification(root, "Bitte Artikel auswählen", 1000, "yellow")
+
+def orderDelete():
+    global selectedItems
+    selectedItems = collections.OrderedDict()
+    orderDisplay()
+
+def orderDisplay():
     orders = widgets.totalTreeViewItems.get_children()
     if orders != '()':
         for order in orders:
             widgets.totalTreeViewItems.delete(order)
     for item in selectedItems:
         widgets.totalTreeViewItems.insert("", "end", text=item[0], values=("%.2f€" % item[1], str(selectedItems[item]), "%.2f€" % (item[1]*selectedItems[item])), tags=item)
-    updateTotal()
+    orderUpdateTotal()
 
-def updateTotal():
+def orderUpdateTotal():
     global totalSV
     total = 0
     for item in selectedItems:
         total += item[1]*selectedItems[item]
     totalSV.set("Summe:\n%.2f €" % total)
+
+# ---------------------------------------------- #
+# ------------- Special Button Actions --------- #
+# ---------------------------------------------- #
+
+def specialRegisterClose():
+    A = popupQuestionYESNO(root, "Kasse wirklich beenden?", "Beenden?", "yellow")
+    if A:
+        root.destroy()
+
+def specialOrderStorno():
+    global selectedItems
+    player_id = getSelectedPlayerID()
+    if player_id:
+        for item in selectedItems:
+            insert_order = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
+            data = (player_id, item[0], -item[1], selectedItems[item], 0)
+            runQuery(insert_order, data)
+        selectedItems = {}
+        selectedTeam.set("")        # Unselect Team
+        playerDisplay("")          # Show empty Player List
+        orderDisplay()
+
+def specialPlayerPay(parent):
+    playerID = getSelectedPlayerID()
+    if playerID:
+        # create window
+        popupRoot = tk.Toplevel()
+        popupRoot.title("Spieler Abrechnen")
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        # create frame for treeView and ScrollBar
+        popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
+        # create treeview
+        popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
+        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        # configure treeview headings
+        popupWidgetTreeView.heading("#0", text="Bestellung")
+        popupWidgetTreeView.heading("Preis", text="Preis", anchor=tk.W)
+        popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
+        popupWidgetTreeView.heading("Gesamt", text="Gesamt")
+        popupWidgetTreeView.heading("Bezahlt", text="Bezahlt")
+        # configure treeview columns
+        popupWidgetTreeView.column('#0', width=100, stretch=1)
+        popupWidgetTreeView.column('Preis', width=20, stretch=1)
+        popupWidgetTreeView.column('Anzahl', width=10, stretch=1)
+        popupWidgetTreeView.column('Gesamt', width=20, stretch=1)
+        popupWidgetTreeView.column('Bezahlt', width=10, stretch=1)
+        # scrollbar for tree view
+        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
+        popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
+        # create widgets
+        popupSVTotalSum = tk.StringVar()
+        popupSVTotalPaid = tk.StringVar()
+        popupSVTotalDue = tk.StringVar()
+        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:")
+        popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
+        popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:")
+        popupWidgetLabelTotal = tk.Label(popupRoot, textvariable=popupSVTotalSum)
+        popupWidgetLabelPaid = tk.Label(popupRoot, textvariable=popupSVTotalPaid)
+        popupWidgetLabelDue = tk.Label(popupRoot, textvariable=popupSVTotalDue)
+        popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy())
+        popupWidgetButtonPay = tk.Button(popupRoot, text="Bezahlen", command=lambda: deduction())
+        # configure widgets
+        popupPixel = tk.PhotoImage(width=1, height=1)
+        popupWidgetDescTotal.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1)
+        popupWidgetDescPaid.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1)
+        popupWidgetDescDue.configure(image=popupPixel, compound="center", anchor="e", font=(None, 20, "bold"), width=1, height=1)
+        popupWidgetLabelTotal.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1)
+        popupWidgetLabelPaid.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1)
+        popupWidgetLabelDue.configure(image=popupPixel, compound="center", anchor="w", font=(None, 20, "bold"), width=1, height=1)
+        popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1)
+        popupWidgetButtonPay.configure(image=popupPixel, compound="center", font=(None, 20), width=1, height=1)
+        # place widgets on grid
+        popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonAbort.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonPay.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
+        # use pack for treeview and vsb
+        popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
+        popupWidgetTreeViewVSB.pack(fill="both",side="right")
+        # configure grid
+        popupRoot.columnconfigure(0, weight=1)
+        popupRoot.columnconfigure(1, weight=1)
+        popupRoot.rowconfigure(0, weight=30)
+        popupRoot.rowconfigure(1, weight=1)
+        popupRoot.rowconfigure(2, weight=1)
+        popupRoot.rowconfigure(3, weight=1)
+        popupRoot.rowconfigure(4, weight=2)
+        # sum up purchases
+        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
+        purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
+        total_paid = 0
+        total_due = 0
+        for purchase in purchases:
+            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
+            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
+            total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
+        total = total_due+total_paid
+        popupSVTotalSum.set("%.2f €" % total)
+        popupSVTotalPaid.set("%.2f €" % total_paid)
+        popupSVTotalDue.set("%.2f €" % total_due)
+        # run SQL query
+        def deduction():
+            pay_purchases = "UPDATE purchases SET is_payed = 1 WHERE player_id = ?"
+            runQuery(pay_purchases, (playerID,))
+            set_payed = "UPDATE players SET is_payed = 1 WHERE id = ?"
+            runQuery(set_payed, (playerID,))
+            playerDisplay(getSelectedTeam())
+            popupRoot.destroy()
+        #
+        parent.wait_window(popupRoot) # make parent window wait
 
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Create Layout ------------------------------------------ #
@@ -472,12 +575,13 @@ pixel = tk.PhotoImage(width=1, height=1)
 
 style = ttk.Style()
 style.configure("Treeview", font=("Verdana", 20), rowheight=45)
-style.configure("Treeview.Heading", font=("Verdana", 15), rowheight=30)
-# style.configure("TButton", font=("Verdana",20))
+style.configure("Treeview.Heading", font=("Verdana", 15))
+# style.configure("TButton", font=("Calibri"))
 
 # ---------------------------------------------- #
 # ------------- Create Main Frames ------------- #
 # ---------------------------------------------- #
+# these are the statusbar and the main application area
 
 frames.main = tk.Frame(root, bg="red")
 frames.statusbar = tk.Frame(root, bg="#DBDF31")
@@ -492,6 +596,8 @@ root.columnconfigure(0, weight=1)
 # ---------------------------------------------- #
 # ------------- Left and Right main frames ----- #
 # ---------------------------------------------- #
+# here the main application area is split equally into the left and right columns
+# this is probably not needed -> I just have to set the grid correctly and get rid of the 'mainLeft' and 'mainRight' frames
 
 frames.mainLeft = tk.Frame(frames.main, bg="pink")
 frames.mainRight = tk.Frame(frames.main, bg="orange")
@@ -504,8 +610,11 @@ frames.main.columnconfigure(1, weight=1)
 frames.main.rowconfigure(0, weight=1)
 
 # ---------------------------------------------- #
-# ------------- Create Subframees -------------- #
+# ------------- Create Subframes --------------- #
 # ---------------------------------------------- #
+# now four frames are created for the teams, players, items, and the total view
+# teams and players go into the 'left' area and are set next to each other
+# items and total are set into the 'right' area and are above one another
 
 frames.teams = tk.Frame(frames.mainLeft, bg="#C3C3C3")
 frames.players = tk.Frame(frames.mainLeft, bg="#FC5252")
@@ -542,19 +651,19 @@ assets.teamimageResizeOn  = {}
 assets.teamimageResizeOff = {}
 
 f = open("teams.txt", "r")
-teamList = f.readlines()
+assets.teamList = f.readlines()
 f.close()
-teamList = list(map(str.strip, teamList))
+assets.teamList = list(map(str.strip, assets.teamList))
 
 # load team images and store
-for i in range(len(teamList)):
-    assets.teamimageOn[i] = Image.open("Logo_" + teamList[i] + "_On.gif")
-    assets.teamimageOff[i] = Image.open("Logo_" + teamList[i] + "_Off.gif")
+for i in range(len(assets.teamList)):
+    assets.teamimageOn[i] = Image.open("Logo_" + assets.teamList[i] + "_On.gif")
+    assets.teamimageOff[i] = Image.open("Logo_" + assets.teamList[i] + "_Off.gif")
 
 # create buttons
-for i in range(len(teamList)):
-    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, teamList[i]), value=teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3", background="#C3C3C3")
+for i in range(len(assets.teamList)):
+    widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, assets.teamList[i]), value=assets.teamList[i], variable=selectedTeam)
+    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3", background="#C3C3C3")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=5, pady=5)
 
 # configure team frame so that contents scale
@@ -567,7 +676,7 @@ def ResizeTeamImages():
     # print("resize team image called")
     root.update_idletasks()
     frames.teams.update()
-    for i in range(len(teamList)):
+    for i in range(len(assets.teamList)):
         teamimagesize = min(widgets.teambuttons[i].winfo_height(), widgets.teambuttons[i].winfo_width())
         # resize images
         assets.teamimageResizeOn[i] = ImageTk.PhotoImage(assets.teamimageOn[i].resize( (teamimagesize, teamimagesize), resample=Image.LANCZOS))
@@ -596,9 +705,9 @@ widgets.playerTreeView.column("one", width=20, stretch=1, anchor="center")
 widgets.playerTreeViewVSB = ttk.Scrollbar(frames.playerTreeViewFrame,orient="vertical",command=widgets.playerTreeView.yview)
 widgets.playerTreeView.configure(yscrollcommand=widgets.playerTreeViewVSB.set)
 
-widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer)
-widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer)
-widgets.playerButtonShowSum = tk.Button(frames.players, text="Summe anzeigen", command=popupShowSum())
+widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=lambda: playerAdd(root))
+widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=lambda: playerRename(root))
+widgets.playerButtonShowSum = tk.Button(frames.players, text="Summe anzeigen", command=lambda: playerShowSum(root))
 
 widgets.playerButtonAdd.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
 widgets.playerButtonRename.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
@@ -622,9 +731,9 @@ def ResizePlayerTreeViewColumn():
     # print("resize team image called")
     root.update_idletasks()
     frames.players.update()
-    w = widgets.playerTreeView.winfo_width()
-    widgets.playerTreeView.column("#0", width=int(w/10*9), stretch=1, anchor="e")
-    widgets.playerTreeView.column("one", width=int(w/10*1), stretch=1, anchor="center")
+    treeviewWidth = widgets.playerTreeView.winfo_width()
+    widgets.playerTreeView.column("#0", width=int(treeviewWidth/10*9), stretch=1, anchor="e")
+    widgets.playerTreeView.column("one", width=int(treeviewWidth/10*1), stretch=1, anchor="center")
 
 ResizePlayerTreeViewColumn()
 
@@ -642,13 +751,13 @@ widgets.itembutton = {}
 
 # read food file
 f = open("food.txt", "r")
-foodList = f.readlines()
+assets.foodList = f.readlines()
 f.close()
 
-itemsPerRow = 5
+settings.itemsPerRow = 5
 
-for i in range(len(foodList)):
-    [name, price, category] = foodList[i].strip().split(";")
+for i in range(len(assets.foodList)):
+    [name, price, category] = assets.foodList[i].strip().split(";")
     items.name.append(name)
     items.price.append(price)
     items.category.append(int(category))
@@ -659,7 +768,7 @@ for i in range(len(set(items.category))):
     frames.itemcategories[i] = tk.Frame(frames.items, bg="#71C968")
     frames.itemcategories[i].grid(column=0, row=i, sticky=tk.NSEW, padx=5, pady=5)
     #calc needed weight for each frame
-    rowweight = math.ceil(items.category.count(sorted(set(items.category))[i]) / itemsPerRow)
+    rowweight = math.ceil(items.category.count(sorted(set(items.category))[i]) / settings.itemsPerRow)
     #configure with correct weight
     frames.items.rowconfigure(i,weight=rowweight)
     frames.items.columnconfigure(0,weight=1)
@@ -676,12 +785,12 @@ for i in range(len(items.name)):
         if items.category[j] == items.category[i]:
             currentint = currentint +1
     # place widget in category frame
-    widgets.itembutton[i].grid(row=(currentint)//itemsPerRow, column=(currentint)%itemsPerRow, sticky=tk.NSEW, pady=5, padx=5)
+    widgets.itembutton[i].grid(row=(currentint)//settings.itemsPerRow, column=(currentint)%settings.itemsPerRow, sticky=tk.NSEW, pady=5, padx=5)
 
 for i in range(len(frames.itemcategories)):
     # for j in range(frames.itemcategories[i].grid_size()[0]):
     # print("container "+str(i))
-    for j in range(itemsPerRow):
+    for j in range(settings.itemsPerRow):
         frames.itemcategories[i].columnconfigure(j, weight=1)
         # print("column "+str(j))
     for j in range(frames.itemcategories[i].grid_size()[1]):
@@ -691,9 +800,6 @@ for i in range(len(frames.itemcategories)):
 # ---------------------------------------------- #
 # -------------fill total frame ---------------- #
 # ---------------------------------------------- #
-
-totalSV = tk.StringVar()
-totalSV.set("Summe:\n0.00 €")
 
 frames.totalTreeViewFrame = tk.Frame(frames.total, bg="green")
 
@@ -713,8 +819,8 @@ widgets.totalTreeViewItemsVSB = ttk.Scrollbar(frames.totalTreeViewFrame,orient="
 widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
-widgets.totalButtonClear = tk.Button(frames.total, text="Auswahl\nlöschen", command=deleteOrder, highlightbackground="#307F95")
-widgets.totalButtonConfirm = tk.Button(frames.total, text="Buchung\nbestätigen", command=confirmOrder, highlightbackground="#307F95")
+widgets.totalButtonClear = tk.Button(frames.total, text="Auswahl\nlöschen", command=orderDelete, highlightbackground="#307F95")
+widgets.totalButtonConfirm = tk.Button(frames.total, text="Buchung\nbestätigen", command=orderConfirm, highlightbackground="#307F95")
 
 widgets.totalLabelSum.configure(image=pixel, font=("Verdana", 20), relief="sunken", height=1, compound="c", width=1)
 widgets.totalButtonClear.configure(image=pixel, compound="c", font=("Verdana", 15), height=1, width=1)
@@ -738,9 +844,9 @@ frames.total.columnconfigure(1,weight=1)
 # -------------fill status bar ----------------- #
 # ---------------------------------------------- #
 
-widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", command=closeRegister, highlightbackground="#DBDF31")
-widgets.statusbarButtonStorno = tk.Button(frames.statusbar, text="Buchung stornieren", command=stornoOrder, highlightbackground="#DBDF31")
-widgets.statusbarButtonPay = tk.Button(frames.statusbar, text="Spieler abrechnen", command=popupPay, highlightbackground="#DBDF31")
+widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", command=specialRegisterClose, highlightbackground="#DBDF31")
+widgets.statusbarButtonStorno = tk.Button(frames.statusbar, text="Buchung stornieren", command=specialOrderStorno, highlightbackground="#DBDF31")
+widgets.statusbarButtonPay = tk.Button(frames.statusbar, text="Spieler abrechnen", command=lambda: specialPlayerPay(root), highlightbackground="#DBDF31")
 widgets.statusbarLabelTime = tk.Label(frames.statusbar, text="12:10", highlightbackground="#DBDF31")
 
 widgets.statusbarButtonExit.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1)
@@ -764,13 +870,5 @@ frames.statusbar.rowconfigure(0, weight=1)
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Runtime ------------------------------------------------ #
 # -------------------------------------------------------------------------------------------- #
-
-# create Player Table
-create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text, is_payed integer default 0)"
-runQuery(create_table_players)
-
-# create Order Table
-create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0)"
-runQuery(create_table_order)
 
 root.mainloop()
