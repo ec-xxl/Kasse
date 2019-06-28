@@ -20,15 +20,17 @@ import platform
 
 # TODO
 # - [] Info - Feld für jeden Spieler
-# - [] Hauptfenster in Focus nach Meldung(Mac - Problem)
+# - [x] Hauptfenster in Focus nach Meldung(Mac - Problem)
 # - [] Sicherheitsabfrage bei Beenden und Stornieren
-# - [] Popups mit richtigen Labels
-# - [] Tree View Column Width
+# - [x] Popups mit richtigen Labels
+# - [x] Tree View Column Width
 # - [] Stornosytem gegebenenfalls überarbeiten
 # - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
 # - [] Scrollbar Breiter
 # - [] Datenbank als CSV exportieren
-# - [] evtl hintergundfenster blockieren
+# - [x] evtl hintergundfenster blockieren
+# - [] Summe anzeigen und Abrechnen nach unten
+# - [] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
 
 # ---------------------------------------------- #
 # ------------- Create Namespaces -------------- #
@@ -369,6 +371,79 @@ def popupPay():
         # mainloop
         popupRoot.mainloop()
 
+def popupShowSum():
+    playerID = getSelectedPlayerID()
+    if playerID:
+        # create window
+        popupRoot = tk.Toplevel()
+        popupRoot.title("Summe")
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        # create frame for treeView and ScrollBar
+        popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
+        # create treeview
+        popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame)
+        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        popupWidgetTreeView.heading("#0", text="Bestellung")
+        popupWidgetTreeView.heading("Preis", text="Preis", anchor=tk.W)
+        popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
+        popupWidgetTreeView.heading("Gesamt", text="Gesamt")
+        popupWidgetTreeView.heading("Bezahlt", text="Bezahlt")
+        popupWidgetTreeView.column('#0', width=100, stretch=1)
+        popupWidgetTreeView.column('Preis', width=20, stretch=1)
+        popupWidgetTreeView.column('Anzahl', width=10, stretch=1)
+        popupWidgetTreeView.column('Gesamt', width=20, stretch=1)
+        popupWidgetTreeView.column('Bezahlt', width=10, stretch=1)
+        # scrollbar for tree view
+        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
+        popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
+        # sum up purchases
+        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
+        purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
+        total_payed = 0
+        total_due = 0
+        for purchase in purchases:
+            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
+            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
+            total_payed += (purchase[1]*purchase[2]) if purchase[3] else 0
+        total = total_due+total_payed
+        # create labels
+        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:", anchor="e", width=1)
+        popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:", anchor="e", width=1)
+        popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:", anchor="e", font=(None, 15, "bold"), width=1)
+        popupWidgetLabelTotal = tk.Label(popupRoot, text="%.2f€" % total, anchor="w", width=1)
+        popupWidgetLabelPaid = tk.Label(popupRoot, text="%.2f€" % total_payed, anchor="w", width=1)
+        popupWidgetLabelDue = tk.Label(popupRoot, text="%.2f€" % total_due, anchor="w", font=(None, 15, "bold"), width=1)
+        # create buttons
+        popupPixel = tk.PhotoImage(width=1, height=1)
+        popupWidgetLabelOK = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy(), image=popupPixel, compound="center", width=1)
+        # place widgets on grid
+        popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.EW)
+        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.EW)
+        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.EW)
+        popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.EW)
+        popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.EW)
+        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.EW)
+        popupWidgetLabelAbort.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelOK.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
+        popupWidgetTreeViewVSB.pack(fill="both",side="right")
+        # configure button
+        popupWidgetLabelOK.config(font=("Verdana", 20))
+        # configure grid
+        popupRoot.columnconfigure(0, weight=1)
+        popupRoot.columnconfigure(1, weight=1)
+        popupRoot.rowconfigure(0, weight=1)
+        popupRoot.rowconfigure(1, weight=0)
+        popupRoot.rowconfigure(2, weight=0)
+        popupRoot.rowconfigure(3, weight=0)
+        popupRoot.rowconfigure(4, weight=0)
+        # mainloop
+        popupRoot.mainloop()
+
 # ---------------------------------------------- #
 # ------------- Manage Order View -------------- #
 # ---------------------------------------------- #
@@ -523,16 +598,16 @@ widgets.playerTreeView.configure(yscrollcommand=widgets.playerTreeViewVSB.set)
 
 widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=addPlayer)
 widgets.playerButtonRename = tk.Button(frames.players, text="Spieler umbenennen", command=renamePlayer)
-widgets.playerButtonPay = tk.Button(frames.players, text="Spieler abrechnen", command=popupPay)
+widgets.playerButtonShowSum = tk.Button(frames.players, text="Summe anzeigen", command=popupShowSum())
 
 widgets.playerButtonAdd.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
 widgets.playerButtonRename.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
-widgets.playerButtonPay.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
+widgets.playerButtonShowSum.configure(image=pixel, font=("Verdana", 20), height=1, compound="c", highlightbackground="#973131")
 
 frames.playerTreeViewFrame.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=5)
 widgets.playerButtonAdd.grid(row=1, column=0, sticky=tk.NSEW, padx=5, pady=5)
 widgets.playerButtonRename.grid(row=2, column=0, sticky=tk.NSEW, padx=5, pady=5)
-widgets.playerButtonPay.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
+widgets.playerButtonShowSum.grid(row=3, column=0, sticky=tk.NSEW, padx=5, pady=5)
 
 widgets.playerTreeView.pack(fill="both",side="left",expand=tk.TRUE)
 widgets.playerTreeViewVSB.pack(fill="both",side="right")
@@ -665,16 +740,25 @@ frames.total.columnconfigure(1,weight=1)
 
 widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", command=closeRegister, highlightbackground="#DBDF31")
 widgets.statusbarButtonStorno = tk.Button(frames.statusbar, text="Buchung stornieren", command=stornoOrder, highlightbackground="#DBDF31")
+widgets.statusbarButtonPay = tk.Button(frames.statusbar, text="Spieler abrechnen", command=popupPay, highlightbackground="#DBDF31")
+widgets.statusbarLabelTime = tk.Label(frames.statusbar, text="12:10", highlightbackground="#DBDF31")
 
 widgets.statusbarButtonExit.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1)
 widgets.statusbarButtonStorno.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1)
+widgets.statusbarButtonPay.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1)
+widgets.statusbarLabelTime.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1)
 
 widgets.statusbarButtonExit.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=2)
 widgets.statusbarButtonStorno.grid(row=0, column=1, sticky=tk.NSEW, padx=5, pady=2)
+widgets.statusbarButtonPay.grid(row=0, column=2, sticky=tk.NSEW, padx=5, pady=2)
+widgets.statusbarLabelTime.grid(row=0, column=5, sticky=tk.NSEW, padx=5, pady=2)
 
 frames.statusbar.columnconfigure(0,weight=1)
 frames.statusbar.columnconfigure(1,weight=1)
-frames.statusbar.columnconfigure(3,weight=5)
+frames.statusbar.columnconfigure(2,weight=1)
+frames.statusbar.columnconfigure(3,weight=1)
+frames.statusbar.columnconfigure(4,weight=1)
+frames.statusbar.columnconfigure(5,weight=1)
 frames.statusbar.rowconfigure(0, weight=1)
 
 # -------------------------------------------------------------------------------------------- #
