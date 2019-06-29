@@ -34,6 +34,12 @@ import platform
 # - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
 # - [] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
 
+# ERROR Linux
+# "overridedirect true" is needed for popups created with "toplevel" if popups are to stay above a fullscreen main window
+# if the main window (created with "tk.Tk" and instantiated with "mainloop()") is NOT fullscreen, "Toplevel" popups dont need to be either
+
+# ERROR MacOS
+
 # ---------------------------------------------- #
 # ------------- Create root window ------------- #
 # ---------------------------------------------- #
@@ -41,11 +47,11 @@ import platform
 root = tk.Tk()
 root.title("Kassensystem Südsee Cup")
 if platform.system() == "Darwin":
-    # root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
-    # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
-    # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
-    root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
-    # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
+    root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
+    # root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
+    root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
 else:
@@ -235,7 +241,7 @@ def playerAdd(parent):
 
     if getSelectedTeam():
         # create popup window
-        popupRoot = tk.Toplevel()
+        popupRoot = tk.Toplevel(bg="#C3C3C3")
         # create widgets
         popupWidgetLabel = tk.Label(popupRoot, text="Spieler hinzufügen")
         popupWidgetEntry = tk.Entry(popupRoot)
@@ -243,10 +249,10 @@ def playerAdd(parent):
         popupWidgetButtonOK = tk.Button(popupRoot, text="OK", command=lambda: callback())
         # configure widgets
         popupPixel = tk.PhotoImage(width=1, height=1)
-        popupWidgetLabel.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
+        popupWidgetLabel.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1,bg="#C3C3C3")
         popupWidgetEntry.configure(justify='center', font=(None,20), width=1)
-        popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1)
-        popupWidgetButtonOK.configure(image=popupPixel, compound="center", font=(None,20), width=1, height=1)
+        popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None,15), width=1, height=1, highlightbackground="#C3C3C3")
+        popupWidgetButtonOK.configure(image=popupPixel, compound="center", font=(None,20), width=1, height=1, highlightbackground="#C3C3C3")
         # place on grid
         popupWidgetLabel.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetEntry.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
