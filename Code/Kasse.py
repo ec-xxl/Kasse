@@ -41,6 +41,9 @@ import platform
 
 # ERROR MacOS
 
+# Error
+# after ending "player rename" or "plaer add" buton with keypress "OK" the next time the window is openend no focus into the "entry" field can be achieved
+
 # ---------------------------------------------- #
 # ------------- Create root window ------------- #
 # ---------------------------------------------- #
@@ -274,7 +277,7 @@ def playerAdd(parent):
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        popupRoot.bind("<Return>", callback)
+        # popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
     else:
@@ -328,7 +331,7 @@ def playerRename(parent):
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        popupRoot.bind("<Return>", callback)
+        # popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
     else:
@@ -357,7 +360,7 @@ def playerShowSum(parent):
         popupWidgetTreeView.column('Gesamt', width=20, stretch=1, anchor="center")
         popupWidgetTreeView.column('Bezahlt', width=10, stretch=1, anchor="center")
         # scrollbar for tree view
-        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
+        popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
         # create widgets
         popupSVTotalSum = tk.StringVar()
@@ -511,7 +514,7 @@ def specialPlayerPay(parent):
         popupWidgetTreeView.column('Gesamt', width=20, stretch=1)
         popupWidgetTreeView.column('Bezahlt', width=10, stretch=1)
         # scrollbar for tree view
-        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview)
+        popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
         # create widgets
         popupSVTotalSum = tk.StringVar()
@@ -721,7 +724,7 @@ widgets.playerTreeView.heading("one", text="B", anchor="center")
 widgets.playerTreeView.column("#0", width=100, stretch=1, anchor="w")
 widgets.playerTreeView.column("one", width=20, stretch=1, anchor="center")
 
-widgets.playerTreeViewVSB = ttk.Scrollbar(frames.playerTreeViewFrame,orient="vertical",command=widgets.playerTreeView.yview)
+widgets.playerTreeViewVSB = tk.Scrollbar(frames.playerTreeViewFrame,orient="vertical",command=widgets.playerTreeView.yview, width=35)
 widgets.playerTreeView.configure(yscrollcommand=widgets.playerTreeViewVSB.set)
 
 widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=lambda: playerAdd(root))
@@ -834,7 +837,7 @@ widgets.totalTreeViewItems.column('Anzahl', width=1, stretch=1, anchor="center")
 widgets.totalTreeViewItems.column('Gesamt', width=1, stretch=1, anchor="center")
 widgets.totalTreeViewItems.bind('<<TreeviewSelect>>', onSelectOrder)
 
-widgets.totalTreeViewItemsVSB = tk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview, width=30)
+widgets.totalTreeViewItemsVSB = tk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview, width=35)
 widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
