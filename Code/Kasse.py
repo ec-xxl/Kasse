@@ -27,11 +27,11 @@ import platform
 # - [x] Buchung nur ermöglichen, wenn auch Artikel gewählt sind!
 # - [x] evtl hintergundfenster blockieren
 # - [x] Summe anzeigen und Abrechnen nach unten
+# - [x] Scrollbar Breiter
 # - [] Stornosytem gegebenenfalls überarbeiten
 # - [] Info - Feld für jeden Spieler
 # - [] Datenbank als CSV exportieren
 # - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
-# - [] Scrollbar Breiter
 # - [] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
 
 # ---------------------------------------------- #
@@ -46,7 +46,7 @@ if platform.system() == "Darwin":
     # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
     root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
     # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
-    # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
+    root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
 else:
     # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
