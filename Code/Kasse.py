@@ -86,17 +86,18 @@ totalSV.set("Summe:\n0.00 €")
 def popupNotification(parent, s, t, c):
     # create popup window
     popupRoot = tk.Toplevel()
+    # create label
+    popupWidgetLabelMsg = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
+    popupWidgetLabelMsg.pack(expand=1, fill="both")
+    # bind
+    popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 1000 = 1 seconds
+    # configure popup window
     popupRoot.title("!")
     popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set() # make this the only accessible window
     popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
-    # create label
-    popupWidgetLabelMsg = tk.Label(popupRoot, text=s, font=("Verdana", 20), bg=c)
-    popupWidgetLabelMsg.pack(expand=1, fill="both")
-    # bind
-    popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 1000 = 1 seconds
     # make parent window wait
     parent.wait_window(popupRoot)
 
@@ -107,12 +108,6 @@ def popupQuestionYESNO(parent, message, title, colour):
         popupRoot.destroy()
     # create popup window
     popupRoot = tk.Toplevel(background=colour)
-    popupRoot.title(title)
-    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
-    popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-    popupRoot.focus_set()
-    popupRoot.grab_set() # make this the only accessible window
-    popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
     # create widgets
     popupWidgetLabelMsg = tk.Label(popupRoot, text=message)
     popupWidgetButtonNo = tk.Button(popupRoot, text="Nein", command=lambda *args: setAnswer(0) )
@@ -131,6 +126,13 @@ def popupQuestionYESNO(parent, message, title, colour):
     popupRoot.columnconfigure(1, weight=1)
     popupRoot.rowconfigure(0, weight=1)
     popupRoot.rowconfigure(1, weight=1)
+    # configure popup window
+    popupRoot.title(title)
+    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+    popupRoot.focus_set()
+    popupRoot.grab_set() # make this the only accessible window
+    popupRoot.geometry("%dx%d+%d+%d" % (400, 100, root.winfo_screenwidth()/2 - 200, root.winfo_screenheight()/2 - 50 ))
     # make parent window wait for desctruction
     parent.wait_window(popupRoot)
     return popupReturnVar.get()
@@ -234,12 +236,6 @@ def playerAdd(parent):
     if getSelectedTeam():
         # create popup window
         popupRoot = tk.Toplevel()
-        popupRoot.title("Spieler hinzufügen")
-        # popupRoot.overrideredirect(1)
-        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-        popupRoot.focus_set()
-        popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # create widgets
         popupWidgetLabel = tk.Label(popupRoot, text="Spieler hinzufügen")
         popupWidgetEntry = tk.Entry(popupRoot)
@@ -265,7 +261,15 @@ def playerAdd(parent):
         #
         popupWidgetEntry.focus()
         popupRoot.bind("<Return>", callback)
-        parent.wait_window(popupRoot) # make parent window wait
+        # configure popup window
+        popupRoot.title("Spieler hinzufügen")
+        popupRoot.overrideredirect(1)
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
+        # make parent window wait
+        parent.wait_window(popupRoot)
     else:
         popupNotification(root, "Bitte ein Team auswählen", 1000, "yellow")
 
@@ -283,11 +287,6 @@ def playerRename(parent):
     if getSelectedPlayerID():
         # create popup window
         popupRoot = tk.Toplevel()
-        popupRoot.title("Spieler umbenennen")
-        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-        popupRoot.focus_set()
-        popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # create widgets
         popupWidgetLabel = tk.Label(popupRoot, text="Spieler umbenennen")
         popupWidgetEntry = tk.Entry(popupRoot)
@@ -313,8 +312,15 @@ def playerRename(parent):
         #
         popupWidgetEntry.focus()
         popupRoot.bind("<Return>", callback)
-        #
-        parent.wait_window(popupRoot) # make parent window wait
+        # configure popup window
+        popupRoot.title("Spieler umbenennen")
+        popupRoot.overrideredirect(1)
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
+        # make parent window wait
+        parent.wait_window(popupRoot)
     else:
         popupNotification(root, "Bitte einen Spieler auswählen", 1000, "yellow")
 
@@ -323,11 +329,6 @@ def playerShowSum(parent):
     if playerID:
         # create window
         popupRoot = tk.Toplevel()
-        popupRoot.title("Summe")
-        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-        popupRoot.focus_set()
-        popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
         # create frame for treeView and ScrollBar
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
@@ -401,8 +402,15 @@ def playerShowSum(parent):
         popupSVTotalSum.set("%.2f €" % total)
         popupSVTotalPaid.set("%.2f €" % total_paid)
         popupSVTotalDue.set("%.2f €" % total_due)
-        # run
-        parent.wait_window(popupRoot) # make parent window wait
+        # configure popup window
+        popupRoot.title("Summe")
+        popupRoot.overrideredirect(1)
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        # make parent window wait
+        parent.wait_window(popupRoot)
 
 # ---------------------------------------------- #
 # ------------- Order Button Actions ----------- #
@@ -475,11 +483,6 @@ def specialPlayerPay(parent):
     if playerID:
         # create window
         popupRoot = tk.Toplevel()
-        popupRoot.title("Spieler Abrechnen")
-        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
-        popupRoot.focus_set()
-        popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
         # create frame for treeView and ScrollBar
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
@@ -564,8 +567,15 @@ def specialPlayerPay(parent):
             runQuery(set_payed, (playerID,))
             playerDisplay(getSelectedTeam())
             popupRoot.destroy()
-        #
-        parent.wait_window(popupRoot) # make parent window wait
+        # configure popup window
+        popupRoot.title("Spieler Abrechnen")
+        popupRoot.overrideredirect(1)
+        popupRoot.attributes("-topmost", True)  # Always keep window on top of others
+        popupRoot.focus_set()
+        popupRoot.grab_set() # make this the only accessible window
+        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        # make parent window wait
+        parent.wait_window(popupRoot)
 
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Create Layout ------------------------------------------ #
@@ -697,9 +707,9 @@ frames.playerTreeViewFrame = tk.Frame(frames.players, bg="green")
 
 widgets.playerTreeView = ttk.Treeview(frames.playerTreeViewFrame, height=1)
 widgets.playerTreeView["columns"]=("one")
-widgets.playerTreeView.heading("#0",  text="Spieler", anchor="e")
+widgets.playerTreeView.heading("#0",  text="Spieler", anchor="w")
 widgets.playerTreeView.heading("one", text="B", anchor="center")
-widgets.playerTreeView.column("#0", width=100, stretch=1, anchor="e")
+widgets.playerTreeView.column("#0", width=100, stretch=1, anchor="w")
 widgets.playerTreeView.column("one", width=20, stretch=1, anchor="center")
 
 widgets.playerTreeViewVSB = ttk.Scrollbar(frames.playerTreeViewFrame,orient="vertical",command=widgets.playerTreeView.yview)
@@ -805,17 +815,17 @@ frames.totalTreeViewFrame = tk.Frame(frames.total, bg="green")
 
 widgets.totalTreeViewItems = ttk.Treeview(frames.totalTreeViewFrame)
 widgets.totalTreeViewItems["columns"]=("Preis", "Anzahl", "Gesamt")
-widgets.totalTreeViewItems.heading("#0",  text="Bestellung")
-widgets.totalTreeViewItems.heading("Preis", text="Preis", anchor=tk.W)
-widgets.totalTreeViewItems.heading("Anzahl", text="Anzahl", anchor=tk.W)
-widgets.totalTreeViewItems.heading("Gesamt", text="Gesamt")
-widgets.totalTreeViewItems.column('#0', width=3, stretch=1, anchor="e")
+widgets.totalTreeViewItems.heading("#0",  text="Bestellung", anchor="w")
+widgets.totalTreeViewItems.heading("Preis", text="Preis", anchor="center")
+widgets.totalTreeViewItems.heading("Anzahl", text="Anzahl", anchor="center")
+widgets.totalTreeViewItems.heading("Gesamt", text="Gesamt", anchor="center")
+widgets.totalTreeViewItems.column('#0', width=3, stretch=1, anchor="w")
 widgets.totalTreeViewItems.column('Preis', width=2, stretch=1, anchor="center")
 widgets.totalTreeViewItems.column('Anzahl', width=1, stretch=1, anchor="center")
 widgets.totalTreeViewItems.column('Gesamt', width=2, stretch=1, anchor="center")
 widgets.totalTreeViewItems.bind('<<TreeviewSelect>>', onSelectOrder)
 
-widgets.totalTreeViewItemsVSB = ttk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview)
+widgets.totalTreeViewItemsVSB = tk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview, width=30)
 widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
