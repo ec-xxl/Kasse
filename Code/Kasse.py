@@ -2,6 +2,7 @@
 import collections
 import os
 import time
+import csv
 
 import tkinter as tk
 from time import ctime
@@ -33,9 +34,9 @@ import platform
 # - [x] Scrollbar Breiter
 # - [] Stornosytem gegebenenfalls überarbeiten
 # - [] Info - Feld für jeden Spieler
-# - [] Datenbank als CSV exportieren
-# - [] Uhrzeit in Datenbank + Anzeige in Abrechnung
-# - [] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
+# - [x] Datenbank als CSV exportieren
+# - [x] Uhrzeit in Datenbank + Anzeige in Abrechnung
+# - [x] Export der ausstehenden Summe pro Team (aufgeschlüsset nach Spieler) als CSV
 
 # ERROR Linux
 # "overridedirect true" is needed for popups created with "toplevel" if popups are to stay above a fullscreen main window
@@ -174,6 +175,20 @@ runQuery(create_table_players)
 # create Order Table
 create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0)"
 runQuery(create_table_order)
+
+def sqlExportDB():
+    inpsql3 = sqlite3.connect('kasse.db')
+    sql3_cursor = inpsql3.cursor()
+    sql3_cursor.execute('SELECT players.player_name, players.team_name, purchases.item_name, purchases.item_quantity, purchases.price, purchases.is_payed FROM purchases join players where purchases.player_id=players.id ORDER BY purchases.is_payed, players.team_name, players.player_name')
+    with open('kasse.csv', 'w') as out_csv_file:
+        csv_out = csv.writer(out_csv_file)
+        # write header
+        csv_out.writerow([d[0] for d in sql3_cursor.description])
+        # write data
+        for result in sql3_cursor:
+            csv_out.writerow(result)
+    inpsql3.close()
+    popupNotification(root, "Export abgeschlossen", 800, "green")
 
 # ---------------------------------------------- #
 # ------------- Selection Actions -------------- #
@@ -1015,18 +1030,21 @@ widgets.statusbarButtonExit = tk.Button(frames.statusbar, text="Kasse Beenden", 
 widgets.statusbarButtonStorno = tk.Button(frames.statusbar, text="Buchung stornieren", command=lambda: specialOrderStorno(root))
 widgets.statusbarButtonPay = tk.Button(frames.statusbar, text="Spieler abrechnen", command=lambda: specialPlayerPay(root))
 widgets.statusbarButtonAddNote = tk.Button(frames.statusbar, text="Notiz hinzufügen", command=lambda: specialPlayerAddNote(root))
+widgets.statusbarButtonExportDB = tk.Button(frames.statusbar, text="Datenbank exportieren", command=lambda: sqlExportDB())
 widgets.statusbarLabelTime = tk.Label(frames.statusbar, textvariable=timeSV)
 
 widgets.statusbarButtonExit.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1, highlightbackground="#DBDF31")
 widgets.statusbarButtonStorno.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1, highlightbackground="#DBDF31")
 widgets.statusbarButtonPay.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1, highlightbackground="#DBDF31")
 widgets.statusbarButtonAddNote.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1, highlightbackground="#DBDF31")
+widgets.statusbarButtonExportDB.configure(image=pixel, compound="c", font=("Verdana", 10), height=1, width=1, highlightbackground="#DBDF31")
 widgets.statusbarLabelTime.configure(image=pixel, compound="right", anchor="e", font=("Verdana", 15), height=1, width=1, highlightbackground="#DBDF31", background="#DBDF31")
 
 widgets.statusbarButtonExit.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=2)
 widgets.statusbarButtonStorno.grid(row=0, column=1, sticky=tk.NSEW, padx=5, pady=2)
 widgets.statusbarButtonPay.grid(row=0, column=2, sticky=tk.NSEW, padx=5, pady=2)
 widgets.statusbarButtonAddNote.grid(row=0, column=3, sticky=tk.NSEW, padx=5, pady=2)
+widgets.statusbarButtonExportDB.grid(row=0, column=4, sticky=tk.NSEW, padx=5, pady=2)
 widgets.statusbarLabelTime.grid(row=0, column=5, sticky=tk.NSEW, padx=10, pady=2)
 
 frames.statusbar.columnconfigure(0,weight=1)
