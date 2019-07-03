@@ -8,7 +8,6 @@ from time import strftime
 from tkinter import ttk
 from datetime import datetime
 
-
 import sqlite3
 import math
 from functools import partial
@@ -29,7 +28,7 @@ import platform
 # - [x] evtl hintergundfenster blockieren
 # - [x] Summe anzeigen und Abrechnen nach unten
 # - [x] Scrollbar Breiter
-# - [] Stornosytem gegebenenfalls überarbeiten
+# - [x] Stornosytem gegebenenfalls überarbeiten
 # - [] Info - Feld für jeden Spieler
 # - [x] Datenbank als CSV exportieren
 # - [x] Uhrzeit in Datenbank + Anzeige in Abrechnung
@@ -51,12 +50,12 @@ import platform
 root = tk.Tk()
 root.title("Kassensystem Südsee Cup")
 if platform.system() == "Darwin":
-    root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
-    root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
-    root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
-    # root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
-    root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
-    root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
+    # root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
+    root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
+    # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
+    # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
 else:
     # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
@@ -377,41 +376,49 @@ def playerShowSum(parent):
         # create widgets
         popupSVTotalSum = tk.StringVar()
         popupSVTotalPaid = tk.StringVar()
+        popupSVTotalStorno = tk.StringVar()
         popupSVTotalDue = tk.StringVar()
         popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:")
         popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
+        popupWidgetDescStorno = tk.Label(popupRoot, text="Storniert:")
         popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:")
         popupWidgetLabelTotal = tk.Label(popupRoot, textvariable=popupSVTotalSum)
         popupWidgetLabelPaid = tk.Label(popupRoot, textvariable=popupSVTotalPaid)
+        popupWidgetLabelStorno = tk.Label(popupRoot, textvariable=popupSVTotalStorno)
         popupWidgetLabelDue = tk.Label(popupRoot, textvariable=popupSVTotalDue)
         popupWidgeButtonOK = tk.Button(popupRoot, text="OK", command=popupRoot.destroy)
         # configure widgets
         popupPixel = tk.PhotoImage(width=1, height=1)
         popupWidgetDescTotal.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetDescPaid.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetDescStorno.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetDescDue.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15, "bold"), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelTotal.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelPaid.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetLabelStorno.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelDue.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15, "bold"), width=1, height=1, bg="#C3C3C3")
         popupWidgeButtonOK.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         # place widgets on grid
         popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescStorno.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescDue.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgeButtonOK.grid(column=0, row=4, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelStorno.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelDue.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgeButtonOK.grid(column=0, row=5, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         # use pack for treeview and vsb
         popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
         popupWidgetTreeViewVSB.pack(fill="both",side="right")
         # configure grid
-        popupRoot.rowconfigure(0, weight=30)
+        popupRoot.rowconfigure(0, weight=28)
         popupRoot.rowconfigure(1, weight=2)
         popupRoot.rowconfigure(2, weight=2)
         popupRoot.rowconfigure(3, weight=2)
         popupRoot.rowconfigure(4, weight=2)
+        popupRoot.rowconfigure(5, weight=2)
         popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
         # sum up purchases
@@ -425,9 +432,10 @@ def playerShowSum(parent):
             total_due += 0 if (purchase[3] or purchase[4]) else (purchase[1]*purchase[2])
             total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
             total_storno += (purchase[1]*purchase[2]) if purchase[4] else 0
-        total = total_due+total_paid
+        total = total_due+total_paid+total_storno
         popupSVTotalSum.set("%.2f €" % total)
         popupSVTotalPaid.set("%.2f €" % total_paid)
+        popupSVTotalStorno.set("%.2f €" % total_storno)
         popupSVTotalDue.set("%.2f €" % total_due)
         # configure popup window
         popupRoot.title("Summe")
@@ -621,12 +629,15 @@ def specialPlayerPay(parent):
         # create widgets
         popupSVTotalSum = tk.StringVar()
         popupSVTotalPaid = tk.StringVar()
+        popupSVTotalStorno = tk.StringVar()
         popupSVTotalDue = tk.StringVar()
         popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:")
         popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
+        popupWidgetDescStorno = tk.Label(popupRoot, text="Storniert:")
         popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:")
         popupWidgetLabelTotal = tk.Label(popupRoot, textvariable=popupSVTotalSum)
         popupWidgetLabelPaid = tk.Label(popupRoot, textvariable=popupSVTotalPaid)
+        popupWidgetLabelStorno = tk.Label(popupRoot, textvariable=popupSVTotalStorno)
         popupWidgetLabelDue = tk.Label(popupRoot, textvariable=popupSVTotalDue)
         popupWidgetLabelInfo = tk.Label(popupRoot, text="Notiz:")
         popupWidgetTextInfo = tk.Text(popupRoot)
@@ -636,9 +647,11 @@ def specialPlayerPay(parent):
         popupPixel = tk.PhotoImage(width=1, height=1)
         popupWidgetDescTotal.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetDescPaid.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetDescStorno.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetDescDue.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15, "bold"), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelTotal.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelPaid.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetLabelStorno.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelDue.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15, "bold"), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelInfo.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetTextInfo.configure(height=1, width=1)
@@ -648,27 +661,30 @@ def specialPlayerPay(parent):
         popupWidgetTreeViewFrame.grid(column=0, row=0, columnspan=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescTotal.grid(column=0, row=1, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetDescDue.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescStorno.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescDue.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelTotal.grid(column=1, row=1, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelPaid.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetLabelDue.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelStorno.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelDue.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelInfo.grid(column=2, row=1, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetTextInfo.grid(column=2, row=2, columnspan=2, rowspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonAbort.grid(column=0, row=4, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonPay.grid(column=2, row=4, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetTextInfo.grid(column=2, row=2, columnspan=2, rowspan=3, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonAbort.grid(column=0, row=5, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonPay.grid(column=2, row=5, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         # use pack for treeview and vsb
         popupWidgetTreeView.pack(fill="both",side="left",expand=tk.TRUE)
         popupWidgetTreeViewVSB.pack(fill="both",side="right")
         # configure grid
         popupRoot.columnconfigure(0, weight=2)
         popupRoot.columnconfigure(1, weight=1)
-        popupRoot.columnconfigure(2, weight=2)
-        popupRoot.columnconfigure(3, weight=1)
-        popupRoot.rowconfigure(0, weight=30)
+        popupRoot.columnconfigure(2, weight=1)
+        popupRoot.columnconfigure(3, weight=2)
+        popupRoot.rowconfigure(0, weight=28)
         popupRoot.rowconfigure(1, weight=2)
         popupRoot.rowconfigure(2, weight=2)
         popupRoot.rowconfigure(3, weight=2)
         popupRoot.rowconfigure(4, weight=2)
+        popupRoot.rowconfigure(5, weight=2)
         # sum up purchases
         select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed, is_storno FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed, is_storno"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
@@ -680,9 +696,10 @@ def specialPlayerPay(parent):
             total_due += 0 if (purchase[3] or purchase[4]) else (purchase[1]*purchase[2])
             total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
             total_storno += (purchase[1]*purchase[2]) if purchase[4] else 0
-        total = total_due+total_paid
+        total = total_due+total_paid+total_storno
         popupSVTotalSum.set("%.2f €" % total)
         popupSVTotalPaid.set("%.2f €" % total_paid)
+        popupSVTotalStorno.set("%.2f €" % total_storno)
         popupSVTotalDue.set("%.2f €" % total_due)
         # run SQL query
         def deduction():
