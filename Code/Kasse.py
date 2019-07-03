@@ -1,15 +1,11 @@
 # -*- coding: UTF-8 -*-
 import collections
-import os
-import time
 
 import tkinter as tk
-from time import ctime
+from time import strftime
 from tkinter import ttk
+from datetime import datetime
 
-import ttkwidgets as ttkw
-from datetime import time
-from ttkwidgets import ScrolledListbox
 
 import sqlite3
 import math
@@ -63,7 +59,7 @@ if platform.system() == "Darwin":
 else:
     # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
     root.geometry("%dx%d+0+0" % (1280, 800))
-    # root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
+    root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     root.focus_set()
 
 # ---------------------------------------------- #
@@ -168,11 +164,11 @@ def runQuery(sql, data=None, receive=False):
     connection.close()
 
 # create Player Table
-create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text, is_payed integer default 0)"
+create_table_players = "CREATE TABLE IF NOT EXISTS players(id integer primary key autoincrement, player_name text, team_name text, is_payed integer default 0, info_text text)"
 runQuery(create_table_players)
 
 # create Order Table
-create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0)"
+create_table_order = "CREATE TABLE IF NOT EXISTS purchases(id integer primary key autoincrement, player_id integer, item_name text, item_quantity integer, price numeric, is_payed integer default 0, is_storno integer default 0, purchase_time default current_timestamp)"
 runQuery(create_table_order)
 
 # ---------------------------------------------- #
@@ -204,7 +200,7 @@ def onSelectOrder(evt):
 # ---------------------------------------------- #
 
 def getPlayers(team: str):
-    select_player = "SELECT id, player_name, is_payed FROM players WHERE team_name = ?"
+    select_player = "SELECT id, player_name, is_payed FROM players WHERE team_name = ? ORDER BY player_name"
     players = runQuery(select_player, (team,), receive=tk.TRUE)
     return players
 
@@ -232,7 +228,7 @@ def playerDisplay(team):
     global displayedPlayers
     displayedPlayers = players
     for player_id, player, is_payed in players:
-        widgets.playerTreeView.insert("", "end", text=player, values=("x" if is_payed else ""), tags=player_id)
+        widgets.playerTreeView.insert("", "end", text=player, values=("B" if is_payed else ""), tags=player_id)
     orderUpdateTotal()
 
 def playerAdd(parent):
@@ -348,19 +344,21 @@ def playerShowSum(parent):
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
         popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
-        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt","Zeit")
         # rename treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
         popupWidgetTreeView.heading("Preis", text="Preis", anchor="center")
         popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor="center")
         popupWidgetTreeView.heading("Gesamt", text="Gesamt", anchor="center")
         popupWidgetTreeView.heading("Bezahlt", text="Bezahlt", anchor="center")
+        popupWidgetTreeView.heading("Zeit", text="Zeit", anchor="center")
         # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=1, anchor="w")
         popupWidgetTreeView.column('Preis', width=20, stretch=1, anchor="center")
         popupWidgetTreeView.column('Anzahl', width=10, stretch=1, anchor="center")
         popupWidgetTreeView.column('Gesamt', width=20, stretch=1, anchor="center")
         popupWidgetTreeView.column('Bezahlt', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('Zeit', width=30, stretch=1, anchor="center")
         # scrollbar for tree view
         popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
@@ -405,14 +403,16 @@ def playerShowSum(parent):
         popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
         # sum up purchases
-        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
+        select_purchases = "SELECT item_name, price, item_quantity, is_payed, is_storno, datetime(purchase_time,'localtime') FROM purchases WHERE player_id = ?"  # GROUP BY item_name, price, is_payed, is_storno
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
         total_paid = 0
         total_due = 0
+        total_storno = 0
         for purchase in purchases:
-            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
-            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
+            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "B" if purchase[3] else "S" if purchase[4] else "", datetime.strptime(purchase[5], "%Y-%m-%d %H:%M:%S").strftime("%a, %H:%M")))
+            total_due += 0 if (purchase[3] or purchase[4]) else (purchase[1]*purchase[2])
             total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
+            total_storno += (purchase[1]*purchase[2]) if purchase[4] else 0
         total = total_due+total_paid
         popupSVTotalSum.set("%.2f €" % total)
         popupSVTotalPaid.set("%.2f €" % total_paid)
@@ -486,12 +486,8 @@ def specialOrderStorno(parent):
         def stornoSelection():
             if popupWidgetTreeView.selection():
                 for item in popupWidgetTreeView.selection():
-                    select_storno = "SELECT player_id, item_name, price, item_quantity, is_payed FROM purchases WHERE id = ?"
-                    storno = runQuery(select_storno, (popupWidgetTreeView.item(item).get("tags")[0],), True)[0]
-
-                    insert_storno = "INSERT INTO purchases (player_id, item_name, price, item_quantity, is_payed) VALUES (?, ?, ?, ?, ?)"
-                    data = (storno[0], storno[1], -storno[2], storno[3], 0)
-                    runQuery(insert_storno, data)
+                    update_storno = "UPDATE purchases SET is_storno = 1 WHERE id = ?"
+                    runQuery(update_storno, (popupWidgetTreeView.item(item).get("tags")[0],))
 
                 set_payed = "UPDATE players SET is_payed = 0 WHERE id = ?"
                 runQuery(set_payed, (playerID,))
@@ -506,21 +502,23 @@ def specialOrderStorno(parent):
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
         popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
-        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
+        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt", "Zeit")
         # rename treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
         popupWidgetTreeView.heading("Preis", text="Preis", anchor="center")
         popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor="center")
         popupWidgetTreeView.heading("Gesamt", text="Gesamt", anchor="center")
         popupWidgetTreeView.heading("Bezahlt", text="Bezahlt", anchor="center")
+        popupWidgetTreeView.heading("Zeit", text="Zeit", anchor="center")
         # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=1, anchor="w")
         popupWidgetTreeView.column('Preis', width=20, stretch=1, anchor="center")
         popupWidgetTreeView.column('Anzahl', width=10, stretch=1, anchor="center")
         popupWidgetTreeView.column('Gesamt', width=20, stretch=1, anchor="center")
         popupWidgetTreeView.column('Bezahlt', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('Zeit', width=10, stretch=1, anchor="center")
         # scrollbar for tree view
-        popupWidgetTreeViewVSB = ttk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical",command=popupWidgetTreeView.yview, width=35)
+        popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
         # create widgets
         popupSVTotalSum = tk.StringVar()
@@ -554,13 +552,13 @@ def specialOrderStorno(parent):
         popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
         # sum up purchases
-        select_purchases = "SELECT item_name, price, item_quantity, is_payed, id FROM purchases WHERE player_id = ?"
+        select_purchases = "SELECT item_name, price, item_quantity, is_payed, id, datetime(purchase_time,'localtime') FROM purchases WHERE player_id = ? AND is_storno = 0 AND is_payed = 0"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
         total = 0
         # create an entry in the treeview for every bought item
         for purchase in purchases:
             popupWidgetTreeView.insert("", "end", text=purchase[0], values=(
-            "%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1] * purchase[2]), "x" if purchase[3] else ""), tags=purchase[4])
+            "%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1] * purchase[2]), "x" if purchase[3] else "", datetime.strptime(purchase[5], "%Y-%m-%d %H:%M:%S").strftime("%a, %H:%M")), tags=purchase[4])
             total += (purchase[1] * purchase[2])
         popupSVTotalSum.set(str(total)+ " €")
         # configure popup window
@@ -642,21 +640,23 @@ def specialPlayerPay(parent):
         popupRoot.rowconfigure(3, weight=2)
         popupRoot.rowconfigure(4, weight=2)
         # sum up purchases
-        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed"
+        select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed, is_storno FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed, is_storno"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
         total_paid = 0
         total_due = 0
+        total_storno = 0
         for purchase in purchases:
-            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "x" if purchase[3] else ""))
-            total_due += 0 if purchase[3] else (purchase[1]*purchase[2])
+            popupWidgetTreeView.insert("", "end", text=purchase[0], values=("%.2f€" % purchase[1], purchase[2], "%.2f€" % (purchase[1]*purchase[2]), "B" if purchase[3] else "S" if purchase[4] else ""))
+            total_due += 0 if (purchase[3] or purchase[4]) else (purchase[1]*purchase[2])
             total_paid += (purchase[1]*purchase[2]) if purchase[3] else 0
+            total_storno += (purchase[1]*purchase[2]) if purchase[4] else 0
         total = total_due+total_paid
         popupSVTotalSum.set("%.2f €" % total)
         popupSVTotalPaid.set("%.2f €" % total_paid)
         popupSVTotalDue.set("%.2f €" % total_due)
         # run SQL query
         def deduction():
-            pay_purchases = "UPDATE purchases SET is_payed = 1 WHERE player_id = ?"
+            pay_purchases = "UPDATE purchases SET is_payed = 1 WHERE player_id = ? AND is_storno = 0"
             runQuery(pay_purchases, (playerID,))
             set_payed = "UPDATE players SET is_payed = 1 WHERE id = ?"
             runQuery(set_payed, (playerID,))
@@ -806,7 +806,7 @@ widgets.playerTreeView.heading("one", text="B", anchor="center")
 widgets.playerTreeView.column("#0", width=100, stretch=1, anchor="w")
 widgets.playerTreeView.column("one", width=20, stretch=1, anchor="center")
 
-widgets.playerTreeViewVSB = tk.Scrollbar(frames.playerTreeViewFrame,orient="vertical",command=widgets.playerTreeView.yview, width=35)
+widgets.playerTreeViewVSB = tk.Scrollbar(frames.playerTreeViewFrame, orient="vertical",command=widgets.playerTreeView.yview, width=35)
 widgets.playerTreeView.configure(yscrollcommand=widgets.playerTreeViewVSB.set)
 
 widgets.playerButtonAdd = tk.Button(frames.players, text="Spieler hinzufügen", command=lambda: playerAdd(root))
@@ -935,7 +935,7 @@ widgets.totalLabelSum.grid(column=1, row=0, sticky=tk.NSEW, padx=5, pady=5)
 widgets.totalButtonClear.grid(column=1, row=1, sticky=tk.NSEW, padx=5, pady=5)
 widgets.totalButtonConfirm.grid(column=1, row=2, sticky=tk.NSEW, padx=5, pady=5)
 
-widgets.totalTreeViewItems.pack(fill="both",side="left",expand=tk.TRUE)
+widgets.totalTreeViewItems.pack(fill="both",side="left", expand=tk.TRUE)
 widgets.totalTreeViewItemsVSB.pack(fill="both",side="right")
 
 frames.total.rowconfigure(0,weight=3)
@@ -991,7 +991,6 @@ frames.statusbar.rowconfigure(0, weight=1)
 #     widgets.statusbarLabelTime.after(1000, tick)
 #
 # tick()
-
 # -------------------------------------------------------------------------------------------- #
 # ----------------------------------- Runtime ------------------------------------------------ #
 # -------------------------------------------------------------------------------------------- #
