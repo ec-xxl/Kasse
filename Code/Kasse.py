@@ -355,21 +355,21 @@ def playerShowSum(parent):
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
         popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
-        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt","Zeit")
+        popupWidgetTreeView["columns"] = ("1", "2", "3", "4", "5")
         # rename treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
-        popupWidgetTreeView.heading("Preis", text="Preis", anchor="center")
-        popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor="center")
-        popupWidgetTreeView.heading("Gesamt", text="Gesamt", anchor="center")
-        popupWidgetTreeView.heading("Bezahlt", text="Bezahlt", anchor="center")
-        popupWidgetTreeView.heading("Zeit", text="Zeit", anchor="center")
+        popupWidgetTreeView.heading("1", text="Preis", anchor="center")
+        popupWidgetTreeView.heading("2", text="Anzahl", anchor="center")
+        popupWidgetTreeView.heading("3", text="Gesamt", anchor="center")
+        popupWidgetTreeView.heading("4", text="Info", anchor="center")
+        popupWidgetTreeView.heading("5", text="Zeit", anchor="center")
         # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=1, anchor="w")
-        popupWidgetTreeView.column('Preis', width=20, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Anzahl', width=10, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Gesamt', width=20, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Bezahlt', width=10, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Zeit', width=30, stretch=1, anchor="center")
+        popupWidgetTreeView.column('1', width=20, stretch=1, anchor="center")
+        popupWidgetTreeView.column('2', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('3', width=20, stretch=1, anchor="center")
+        popupWidgetTreeView.column('4', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('5', width=30, stretch=1, anchor="center")
         # scrollbar for tree view
         popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
@@ -443,7 +443,7 @@ def playerShowSum(parent):
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        popupRoot.geometry("%dx%d+%d+%d" % (800, 700, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 350))
         # make parent window wait
         parent.wait_window(popupRoot)
 
@@ -523,21 +523,21 @@ def specialOrderStorno(parent):
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
         popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
-        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt", "Zeit")
+        popupWidgetTreeView["columns"] = ("1", "2", "3", "4", "5")
         # rename treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
-        popupWidgetTreeView.heading("Preis", text="Preis", anchor="center")
-        popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor="center")
-        popupWidgetTreeView.heading("Gesamt", text="Gesamt", anchor="center")
-        popupWidgetTreeView.heading("Bezahlt", text="Bezahlt", anchor="center")
-        popupWidgetTreeView.heading("Zeit", text="Zeit", anchor="center")
+        popupWidgetTreeView.heading("1", text="Preis", anchor="center")
+        popupWidgetTreeView.heading("2", text="Anzahl", anchor="center")
+        popupWidgetTreeView.heading("3", text="Gesamt", anchor="center")
+        popupWidgetTreeView.heading("4", text="Info", anchor="center")
+        popupWidgetTreeView.heading("5", text="Zeit", anchor="center")
         # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=1, anchor="w")
-        popupWidgetTreeView.column('Preis', width=20, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Anzahl', width=10, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Gesamt', width=20, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Bezahlt', width=10, stretch=1, anchor="center")
-        popupWidgetTreeView.column('Zeit', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('1', width=20, stretch=1, anchor="center")
+        popupWidgetTreeView.column('2', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('3', width=20, stretch=1, anchor="center")
+        popupWidgetTreeView.column('4', width=10, stretch=1, anchor="center")
+        popupWidgetTreeView.column('5', width=10, stretch=1, anchor="center")
         # scrollbar for tree view
         popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
@@ -588,7 +588,7 @@ def specialOrderStorno(parent):
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set()  # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        popupRoot.geometry("%dx%d+%d+%d" % (800, 700, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 350))
         # make parent window wait
         parent.wait_window(popupRoot)
 
@@ -677,8 +677,8 @@ def specialPlayerPay(parent):
         # configure grid
         popupRoot.columnconfigure(0, weight=2)
         popupRoot.columnconfigure(1, weight=1)
-        popupRoot.columnconfigure(2, weight=1)
-        popupRoot.columnconfigure(3, weight=2)
+        popupRoot.columnconfigure(2, weight=2)
+        popupRoot.columnconfigure(3, weight=1)
         popupRoot.rowconfigure(0, weight=28)
         popupRoot.rowconfigure(1, weight=2)
         popupRoot.rowconfigure(2, weight=2)
@@ -715,7 +715,7 @@ def specialPlayerPay(parent):
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (600, 700, root.winfo_screenwidth() / 2 - 300, root.winfo_screenheight() / 2 - 350))
+        popupRoot.geometry("%dx%d+%d+%d" % (800, 700, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 350))
         # make parent window wait
         parent.wait_window(popupRoot)
 
