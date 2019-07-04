@@ -49,7 +49,8 @@ import platform
 root = tk.Tk()
 root.title("Kassensystem Südsee Cup")
 if platform.system() == "Darwin":
-    root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # root.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    root.wm_attributes('-type', 'splash')
     root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
     root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
     # root.geometry("%dx%d+%d+%d" % (1280, 800, root.winfo_screenwidth()/2 - 640, root.winfo_screenheight()/2 - 400) )
@@ -101,7 +102,8 @@ def popupNotification(parent, s, t, c):
     popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 1000 = 1 seconds
     # configure popup window
     popupRoot.title("!")
-    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.wm_attributes('-type', 'splash')
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set() # make this the only accessible window
@@ -136,7 +138,8 @@ def popupQuestionYESNO(parent, message, title, colour):
     popupRoot.rowconfigure(1, weight=1)
     # configure popup window
     popupRoot.title(title)
-    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    popupRoot.wm_attributes('-type', 'splash')
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set() # make this the only accessible window
@@ -275,7 +278,7 @@ def playerAdd(parent):
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        # popupRoot.bind("<Return>", callback)
+        popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
     else:
@@ -322,14 +325,15 @@ def playerRename(parent):
         popupRoot.bind("<Return>", callback)
         # configure popup window
         popupRoot.title("Spieler umbenennen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        # popupRoot.bind("<Return>", callback)
+        popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
     else:
@@ -419,7 +423,8 @@ def playerShowSum(parent):
         popupSVTotalDue.set("%.2f €" % total_due)
         # configure popup window
         popupRoot.title("Summe")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
@@ -563,7 +568,8 @@ def specialOrderStorno(parent):
         popupSVTotalSum.set(str(total)+ " €")
         # configure popup window
         popupRoot.title("Stornieren")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set()  # make this the only accessible window
@@ -664,7 +670,8 @@ def specialPlayerPay(parent):
             popupRoot.destroy()
         # configure popup window
         popupRoot.title("Spieler Abrechnen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
