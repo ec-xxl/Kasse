@@ -58,7 +58,7 @@ if platform.system() == "Darwin":
     # root.tk.call("::tk::unsupported::MacWindowStyle", "style", root._w, "plain", "none")
     root.focus_set()
 else:
-    # root.call("wm", "attributes", ".", "-topmost", "true") # Always keep window on top of others
+    # root.geometry("%dx%d+0+0" % (root.winfo_screenwidth(), root.winfo_screenheight()) )
     root.geometry("%dx%d+0+0" % (1280, 800))
     root.call("wm", "attributes", ".", "-fullscreen", "true") # Fullscreen mode
     root.focus_set()
@@ -102,13 +102,14 @@ def popupNotification(parent, s, t, c):
     popupRoot.after(t, lambda: popupRoot.destroy())          # Time in Miliseconds 1000 = 1 seconds
     # configure popup window
     popupRoot.title("!")
-    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # popupRoot.overrideredirect(1)
+    popupRoot.wm_attributes('-type', 'splash')
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
-    popupRoot.grab_set() # make this the only accessible window
+    # popupRoot.grab_set() # make this the only accessible window
     popupRoot.geometry("%dx%d+%d+%d" % (600, 100, root.winfo_screenwidth()/2 - 300, root.winfo_screenheight()/2 - 50 ))
     # make parent window wait
-    parent.wait_window(popupRoot)
+    # parent.wait_window(popupRoot)
 
 def popupQuestionYESNO(parent, message, title, colour):
     popupReturnVar = tk.IntVar()
@@ -137,7 +138,8 @@ def popupQuestionYESNO(parent, message, title, colour):
     popupRoot.rowconfigure(1, weight=1)
     # configure popup window
     popupRoot.title(title)
-    popupRoot.overrideredirect(1) # Remove shadow & drag bar. Note: Must be used before wm calls otherwise these will be removed.
+    # popupRoot.overrideredirect(1)
+    popupRoot.wm_attributes('-type', 'splash')
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set() # make this the only accessible window
@@ -184,7 +186,7 @@ def sqlExportDB():
         for result in sql3_cursor:
             csv_out.writerow(result)
     inpsql3.close()
-    popupNotification(root, "Export abgeschlossen", 800, "green")
+    popupNotification(root, "Export abgeschlossen", 1500, "green")
 
 # ---------------------------------------------- #
 # ------------- Selection Actions -------------- #
@@ -228,7 +230,7 @@ def getSelectedPlayerID():
         player = widgets.playerTreeView.item(curPlayer)
         return int(player.get('tags')[0])
     else:
-        popupNotification(root, "Bitte einen Spieler auswählen", 800, "yellow")
+        popupNotification(root, "Bitte einen Spieler auswählen", 1500, "yellow")
 
 # ---------------------------------------------- #
 # ------------- Player Button Actions ---------- #
@@ -283,14 +285,15 @@ def playerAdd(parent):
         popupRoot.columnconfigure(1, weight=1)
         # configure popup window
         popupRoot.title("Spieler hinzufügen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        # popupRoot.bind("<Return>", callback)
+        popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
 
@@ -335,14 +338,15 @@ def playerRename(parent):
         popupRoot.bind("<Return>", callback)
         # configure popup window
         popupRoot.title("Spieler umbenennen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 200, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 100))
         # set focus and callback
         popupWidgetEntry.focus()
-        # popupRoot.bind("<Return>", callback)
+        popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
 
@@ -439,7 +443,8 @@ def playerShowSum(parent):
         popupSVTotalDue.set("%.2f €" % total_due)
         # configure popup window
         popupRoot.title("Summe")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
@@ -466,9 +471,9 @@ def orderConfirm():
             selectedTeam.set("")        # Unselect Team
             playerDisplay("")          # Show empty Player List
             orderDisplay()
-            popupNotification(root, "Buchung durchgeführt", 800, "green")
+            popupNotification(root, "Buchung durchgeführt", 1500, "green")
         else:
-            popupNotification(root, "Bitte Artikel auswählen", 800, "yellow")
+            popupNotification(root, "Bitte Artikel auswählen", 1500, "yellow")
 
 def orderDelete():
     global selectedItems
@@ -513,9 +518,9 @@ def specialOrderStorno(parent):
                 runQuery(set_payed, (playerID,))
                 playerDisplay(getSelectedTeam())
                 popupRoot.destroy()
-                popupNotification(popupRoot, "Auswahl storniert", 800, "green")
+                popupNotification(popupRoot, "Auswahl storniert", 1500, "green")
             else:
-                popupNotification(popupRoot, "Bitte eine Auswahl treffen", 800, "yellow")
+                popupNotification(popupRoot, "Bitte eine Auswahl treffen", 1500, "yellow")
 
         # create window
         popupRoot = tk.Toplevel(bg="#C3C3C3")
@@ -584,7 +589,8 @@ def specialOrderStorno(parent):
         popupSVTotalSum.set(str(total)+ " €")
         # configure popup window
         popupRoot.title("Stornieren")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set()  # make this the only accessible window
@@ -711,7 +717,8 @@ def specialPlayerPay(parent):
             popupRoot.destroy()
         # configure popup window
         popupRoot.title("Spieler Abrechnen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
@@ -751,14 +758,15 @@ def specialPlayerAddNote(parent):
         popupRoot.columnconfigure(1, weight=1)
         # configure popup window
         popupRoot.title("Spieler hinzufügen")
-        popupRoot.overrideredirect(1)
+        # popupRoot.overrideredirect(1)
+        popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set() # make this the only accessible window
         popupRoot.geometry("%dx%d+%d+%d" % (400, 400, root.winfo_screenwidth() / 2 - 200, root.winfo_screenheight() / 2 - 200))
         # set focus and callback
         popupWidgetText.focus()
-        # popupRoot.bind("<Return>", callback)
+        popupRoot.bind("<Return>", callback)
         # make parent window wait
         parent.wait_window(popupRoot)
 
