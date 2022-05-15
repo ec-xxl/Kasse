@@ -199,10 +199,10 @@ def onSelectTeam(team):
     playerDisplay(team)
 
 
-def onClickItem(_name: str, _price: float):
-    if (_name, price) not in selectedItems:
-        selectedItems[(_name, _price)] = 0
-    selectedItems[(_name, _price)] += 1
+def onClickItem(name: str, price: float):
+    if (name, price) not in selectedItems:
+        selectedItems[(name, price)] = 0
+    selectedItems[(name, price)] += 1
     orderDisplay()
 
 
