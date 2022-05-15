@@ -690,6 +690,10 @@ def specialPlayerPay(parent):
         def addPlayer():
             specialPayPlayerAdd(parent)
 
+        def callbackEnterGiven(*args):
+            returnMoney = float(popupSVGiven.get()) - total_due
+            popupSVReturn.set("%.2f" % returnMoney )
+
         # create window
         popupRoot = tk.Toplevel(bg="#C3C3C3")
         # create treeview for player name list
@@ -698,8 +702,8 @@ def specialPlayerPay(parent):
         popupWidgetTreeViewPlayers["columns"] = ("Summe")
         popupWidgetTreeViewPlayers.heading("#0", text="Name", anchor=tk.W)
         popupWidgetTreeViewPlayers.heading("Summe", text="Summe")
-        popupWidgetTreeViewPlayers.column('#0', width=100, stretch=True)
-        popupWidgetTreeViewPlayers.column('Summe', width=20, stretch=True)
+        popupWidgetTreeViewPlayers.column('#0', width=1, stretch=True)
+        popupWidgetTreeViewPlayers.column('Summe', width=1, stretch=True)
         popupWidgetTreeViewPlayersVSB = tk.Scrollbar(popupWidgetTreeViewPlayersFrame, orient="vertical", command=popupWidgetTreeViewPlayers.yview, width=35)
         popupWidgetTreeViewPlayers.configure(yscrollcommand=popupWidgetTreeViewPlayersVSB.set)
         # create frame for treeView and ScrollBar
@@ -724,12 +728,18 @@ def specialPlayerPay(parent):
         # scrollbar for tree view
         popupWidgetTreeViewVSB = tk.Scrollbar(popupWidgetTreeViewFrame, orient="vertical", command=popupWidgetTreeView.yview, width=35)
         popupWidgetTreeView.configure(yscrollcommand=popupWidgetTreeViewVSB.set)
-        # create widgets
+        # create string variables
         popupSVTotalSum = tk.StringVar()
         popupSVTotalPaid = tk.StringVar()
         popupSVTotalStorno = tk.StringVar()
         popupSVTotalDue = tk.StringVar()
-        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe der Einkäufe:")
+        popupSVGiven = tk.StringVar()
+        popupSVGiven.trace_add("write", callbackEnterGiven)
+        popupSVReturn = tk.StringVar()
+        #
+        popupWidgetButtonAddPlayer = tk.Button(popupRoot, text="Spieler hinzufügen", command=lambda: addPlayer())
+        # create widgets
+        popupWidgetDescTotal = tk.Label(popupRoot, text="Summe:")
         popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
         popupWidgetDescStorno = tk.Label(popupRoot, text="Storniert:")
         popupWidgetDescDue = tk.Label(popupRoot, text="Übrig:")
@@ -739,7 +749,12 @@ def specialPlayerPay(parent):
         popupWidgetLabelDue = tk.Label(popupRoot, textvariable=popupSVTotalDue)
         popupWidgetLabelInfo = tk.Label(popupRoot, text="Notiz:")
         popupWidgetTextInfo = tk.Text(popupRoot)
-        popupWidgetButtonAddPlayer = tk.Button(popupRoot, text="Spieler hinzufügen", command=lambda: addPlayer())
+        #
+        popupWidgetDescGiven = tk.Label(popupRoot, text="Gegeben:")
+        popupWidgetDescReturn = tk.Label(popupRoot, text="Zurück:")
+        popupWidgetLabelGiven = tk.Entry(popupRoot, textvariable=popupSVGiven)
+        popupWidgetLabelReturn = tk.Label(popupRoot, textvariable=popupSVReturn)
+        #
         popupWidgetButtonAbort = tk.Button(popupRoot, text="Abbrechen", command=lambda: popupRoot.destroy())
         popupWidgetButtonPay = tk.Button(popupRoot, text="Bezahlen", command=lambda: deduction())
         # configure widgets
@@ -757,31 +772,45 @@ def specialPlayerPay(parent):
         popupWidgetButtonAddPlayer.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         popupWidgetButtonPay.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
+        #
+        popupWidgetDescGiven.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetDescReturn.configure(image=popupPixel, compound="center", anchor="e", font=(None, 15), width=1, height=1, bg="#C3C3C3")
+        popupWidgetLabelGiven.configure(justify="center", font=(None, 15, "bold"))
+        popupWidgetLabelReturn.configure(justify="center", font=(None, 15, "bold"))
         # place widgets on grid
         popupWidgetTreeViewPlayersFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonAddPlayer.grid(column=2, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+
         popupWidgetTreeViewFrame.grid(column=0, row=1, columnspan=4, sticky=tk.NSEW, padx=10, pady=10)
+
         popupWidgetDescTotal.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetDescPaid.grid(column=0, row=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescPaid.grid(column=0, row=3, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescStorno.grid(column=0, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetDescDue.grid(column=0, row=5, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelTotal.grid(column=1, row=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelPaid.grid(column=1, row=3, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelStorno.grid(column=1, row=4, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetLabelDue.grid(column=1, row=5, sticky=tk.NSEW, padx=10, pady=10)
+
         popupWidgetLabelInfo.grid(column=2, row=2, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetTextInfo.grid(column=2, row=3, columnspan=2, rowspan=3, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonAddPlayer.grid(column=2, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonAbort.grid(column=0, row=6, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonPay.grid(column=2, row=6, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        #
+        popupWidgetDescGiven.grid(column=0, row=6, columnspan=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetDescReturn.grid(column=0, row=7, columnspan=1, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelGiven.grid(column=1, row=6, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetLabelReturn.grid(column=1, row=7, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        #
+        popupWidgetButtonAbort.grid(column=0, row=8, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        popupWidgetButtonPay.grid(column=2, row=8, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         # use pack for treeview and vsb
         popupWidgetTreeViewPlayers.pack(fill="both", side="left", expand=tk.TRUE)
         popupWidgetTreeViewPlayersVSB.pack(fill="both", side="right")
         popupWidgetTreeView.pack(fill="both", side="left", expand=tk.TRUE)
         popupWidgetTreeViewVSB.pack(fill="both", side="right")
         # configure grid
-        popupRoot.columnconfigure(0, weight=2)
+        popupRoot.columnconfigure(0, weight=1)
         popupRoot.columnconfigure(1, weight=1)
-        popupRoot.columnconfigure(2, weight=2)
+        popupRoot.columnconfigure(2, weight=1)
         popupRoot.columnconfigure(3, weight=1)
         popupRoot.rowconfigure(0, weight=2)
         popupRoot.rowconfigure(1, weight=28)
@@ -790,6 +819,8 @@ def specialPlayerPay(parent):
         popupRoot.rowconfigure(4, weight=2)
         popupRoot.rowconfigure(5, weight=2)
         popupRoot.rowconfigure(6, weight=2)
+        popupRoot.rowconfigure(7, weight=2)
+        popupRoot.rowconfigure(8, weight=4)
         # sum up purchases
         select_purchases = "SELECT item_name, price, SUM(item_quantity), is_payed, is_storno FROM purchases WHERE player_id = ? GROUP BY item_name, price, is_payed, is_storno"
         purchases = runQuery(select_purchases, (playerID,), receive=tk.TRUE)
@@ -822,7 +853,7 @@ def specialPlayerPay(parent):
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set()  # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (800, 700, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 350))
+        popupRoot.geometry("%dx%d+%d+%d" % (800, 800, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 400))
         # make parent window wait
         parent.wait_window(popupRoot)
 
