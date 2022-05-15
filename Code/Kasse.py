@@ -1002,8 +1002,12 @@ for i in range(len(assets.teamList)):
 # create buttons
 for i in range(len(assets.teamList)):
     widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, assets.teamList[i]), value=assets.teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3", background="#C3C3C3")
-    widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
+    # widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C2", background="#C3C3C3"
+    # widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
+    nrows = 1
+    ncols = 1
+    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, font=("Verdana", 18, "bold"), height=1, width=1, compound="center", borderwidth=0, bg="blue", fg="white")
+    widgets.teambuttons[i].grid(row=i // nrows, column=i % ncols, sticky=tk.NSEW, padx=0, pady=0)
 
 # configure team frame so that contents scale
 for col_num in range(frames.teams.grid_size()[0]):
@@ -1017,6 +1021,7 @@ def ResizeTeamImages():
     frames.teams.update()
     for ii in range(len(assets.teamList)):
         teamimagesize = min(widgets.teambuttons[ii].winfo_height(), widgets.teambuttons[ii].winfo_width())
+        teamimagesize = widgets.teambuttons[ii].winfo_width()
         # resize images
         assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
         assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
