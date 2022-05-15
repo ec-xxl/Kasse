@@ -13,6 +13,7 @@ import math
 from functools import partial
 from types import SimpleNamespace
 
+import PIL as PIL
 from PIL import Image
 from PIL import ImageTk
 
@@ -1010,7 +1011,6 @@ for col_num in range(frames.teams.grid_size()[0]):
 for row_num in range(frames.teams.grid_size()[1]):
     frames.teams.rowconfigure(row_num, weight=1)
 
-
 def ResizeTeamImages():
     # print("resize team image called")
     root.update_idletasks()
@@ -1018,8 +1018,8 @@ def ResizeTeamImages():
     for ii in range(len(assets.teamList)):
         teamimagesize = min(widgets.teambuttons[ii].winfo_height(), widgets.teambuttons[ii].winfo_width())
         # resize images
-        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(assets.teamimageOn[ii].resize((teamimagesize, teamimagesize), resample=Image.LANCZOS))
-        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(assets.teamimageOff[ii].resize((teamimagesize, teamimagesize), resample=Image.LANCZOS))
+        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
+        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
         # assign images
         widgets.teambuttons[ii].config(image=assets.teamimageResizeOn[ii])
         widgets.teambuttons[ii].config(selectimage=assets.teamimageResizeOff[ii])
