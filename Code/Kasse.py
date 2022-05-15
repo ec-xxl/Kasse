@@ -20,6 +20,7 @@ import platform
 
 # TODO
 # - [] Info - field for every player
+# - [] ERROR - CRITICAL - cannot add multiples of the same item!!!!
 
 # ERROR Linux
 # "overridedirect true" is needed for popups created with "toplevel" if popups
@@ -853,7 +854,9 @@ def specialPlayerPay(parent):
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
         popupRoot.grab_set()  # make this the only accessible window
-        popupRoot.geometry("%dx%d+%d+%d" % (800, 800, root.winfo_screenwidth() / 2 - 400, root.winfo_screenheight() / 2 - 400))
+        windowHeight = 700
+        windwowWidth = 800
+        popupRoot.geometry("%dx%d+%d+%d" % (windwowWidth, windowHeight, (root.winfo_screenwidth() - windwowWidth) / 2, (root.winfo_screenheight() - windowHeight) / 2))
         # make parent window wait
         parent.wait_window(popupRoot)
 
@@ -998,7 +1001,7 @@ for i in range(len(assets.teamList)):
 # create buttons
 for i in range(len(assets.teamList)):
     widgets.teambuttons[i] = tk.Radiobutton(frames.teams, command=partial(onSelectTeam, assets.teamList[i]), value=assets.teamList[i], variable=selectedTeam)
-    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.TRUE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3", background="#C3C3C3")
+    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, bg="#C3C3C3", height=1, width=1, image=pixel, highlightbackground="#C3C3C3", background="#C3C3C3")
     widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
 
 # configure team frame so that contents scale
@@ -1154,8 +1157,8 @@ widgets.totalTreeViewItems.column('Anzahl', width=1, stretch=True, anchor="cente
 widgets.totalTreeViewItems.column('Gesamt', width=1, stretch=True, anchor="center")
 widgets.totalTreeViewItems.bind('<<TreeviewSelect>>', onSelectOrder)
 
-# widgets.totalTreeViewItemsVSB = tk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview, width=35)
-# widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
+widgets.totalTreeViewItemsVSB = tk.Scrollbar(frames.totalTreeViewFrame,orient="vertical",command=widgets.totalTreeViewItems.yview, width=35)
+widgets.totalTreeViewItems.configure(yscrollcommand=widgets.totalTreeViewItemsVSB.set)
 
 widgets.totalLabelSum = tk.Label(frames.total, textvariable=totalSV)
 widgets.totalButtonClear = tk.Button(frames.total, text="Auswahl\nlöschen", command=orderDelete, highlightbackground="#307F95")
@@ -1171,7 +1174,7 @@ widgets.totalButtonClear.grid(column=1, row=1, sticky=tk.NSEW, padx=5, pady=5)
 widgets.totalButtonConfirm.grid(column=1, row=2, sticky=tk.NSEW, padx=5, pady=5)
 
 widgets.totalTreeViewItems.pack(fill="both", side="left", expand=tk.TRUE)
-# widgets.totalTreeViewItemsVSB.pack(fill="both", side="right")
+widgets.totalTreeViewItemsVSB.pack(fill="both", side="right")
 
 frames.total.rowconfigure(0, weight=3)
 frames.total.rowconfigure(1, weight=2)
