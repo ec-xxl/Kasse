@@ -966,7 +966,7 @@ frames.players.grid(row=0, column=1, sticky=tk.NSEW)
 frames.items.grid(row=0, column=0, sticky=tk.NSEW)
 frames.total.grid(row=1, column=0, sticky=tk.NSEW)
 
-frames.mainLeft.columnconfigure(0, weight=8)
+frames.mainLeft.columnconfigure(0, weight=5)
 frames.mainLeft.columnconfigure(1, weight=5)
 frames.mainLeft.rowconfigure(0, weight=1)
 
@@ -1006,7 +1006,7 @@ for i in range(len(assets.teamList)):
     # widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
     nrows = 1
     ncols = 1
-    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, font=("Verdana", 18, "bold"), height=1, width=1, compound="center", borderwidth=0, bg="blue", fg="white")
+    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, font=("Verdana", 18, "bold"), height=1, width=1, compound="center", borderwidth=0, bg="blue", fg="black")
     widgets.teambuttons[i].grid(row=i // nrows, column=i % ncols, sticky=tk.NSEW, padx=0, pady=0)
 
 # configure team frame so that contents scale
@@ -1020,14 +1020,14 @@ def ResizeTeamImages():
     root.update_idletasks()
     frames.teams.update()
     for ii in range(len(assets.teamList)):
-        teamimagesize = min(widgets.teambuttons[ii].winfo_height(), widgets.teambuttons[ii].winfo_width())
-        teamimagesize = widgets.teambuttons[ii].winfo_width()
+        newheight = widgets.teambuttons[ii].winfo_height()
+        newwidth = int(assets.teamimageOn[ii].width * newheight / assets.teamimageOn[ii].height )
         # resize images
-        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
-        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii].resize((teamimagesize, teamimagesize), resample=Image.Resampling.LANCZOS))
+        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS))
+        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS))
         # assign images
-        widgets.teambuttons[ii].config(image=assets.teamimageResizeOn[ii])
-        widgets.teambuttons[ii].config(selectimage=assets.teamimageResizeOff[ii])
+        widgets.teambuttons[ii].config(image=assets.teamimageResizeOff[ii])
+        widgets.teambuttons[ii].config(selectimage=assets.teamimageResizeOn[ii])
 
 
 ResizeTeamImages()

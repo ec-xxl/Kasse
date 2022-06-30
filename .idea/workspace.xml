@@ -5,7 +5,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="91c64d35-45f0-4b70-9c5b-6f99416d3c2c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Code/Kasse.py" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Kasse.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Barzahlung_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Barzahlung_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Barzahlung_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Barzahlung_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Colorado_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Colorado_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_CrazyDogs_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_CrazyDogs_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Disconnection_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Disconnection_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Disconnection_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Disconnection_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_FlyingCircus_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_FlyingCircus_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_FlyingCircus_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_FlyingCircus_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_FrasbaGold_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_FrasbaGold_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Heidees_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Heidees_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Maultaschen_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Maultaschen_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Maultaschen_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Maultaschen_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Mint_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Mint_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Mint_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Mint_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Outernationals_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Outernationals_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Outernationals_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Outernationals_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Parkscheibe_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Parkscheibe_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_PrinzHessinnen_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_PrinzHessinnen_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_RheinDivers_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_RheinDivers_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_RheinDivers_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_RheinDivers_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Solebang_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Solebang_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_TeamSuedsee_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_TeamSuedsee_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_TeamSuedsee_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_TeamSuedsee_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_WhosThatTeam_Off.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_WhosThatTeam_On.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Wombats_Off.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Wombats_Off.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/Logo_Wombats_On.gif" beforeDir="false" afterPath="$PROJECT_DIR$/Code/Logo_Wombats_On.gif" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Code/teams.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Code/teams.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
