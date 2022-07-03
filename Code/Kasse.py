@@ -985,7 +985,7 @@ for i in range(len(assets.teamList)):
     # widgets.teambuttons[i].grid(row=i // 3, column=i % 3, sticky=tk.NSEW, padx=0, pady=0)
     nrows = 1
     ncols = 1
-    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, font=("Verdana", 18, "bold"), height=1, width=1, compound="center", borderwidth=0, bg="blue", fg="black")
+    widgets.teambuttons[i].configure(text=assets.teamList[i], indicatoron=tk.FALSE, font=("Verdana", 18, "bold"), height=1, width=1, compound="center", borderwidth=0, bg="blue", fg="#CDCDCD")
     widgets.teambuttons[i].grid(row=i // nrows, column=i % ncols, sticky=tk.NSEW, padx=0, pady=0)
 
 # configure team frame so that contents scale
@@ -995,15 +995,26 @@ for row_num in range(frames.teams.grid_size()[1]):
     frames.teams.rowconfigure(row_num, weight=1)
 
 def ResizeTeamImages():
-    # print("resize team image called")
+    print("resize team image called")
     root.update_idletasks()
     frames.teams.update()
     for ii in range(len(assets.teamList)):
         newheight = widgets.teambuttons[ii].winfo_height()
         newwidth = int(assets.teamimageOn[ii].width * newheight / assets.teamimageOn[ii].height )
+        buttonwidth = widgets.teambuttons[ii].winfo_width()
         # resize images
-        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS))
-        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS))
+        assets.teamimageOn[ii] = assets.teamimageOn[ii].resize((newwidth, newheight), resample=Image.LANCZOS) # up to pillow 9
+        assets.teamimageOff[ii] = assets.teamimageOff[ii].resize((newwidth, newheight), resample=Image.LANCZOS) # up to pillow 9
+        # assets.teamimageOn[ii] = assets.teamimageOn[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS) # from pillow 10 and on
+        # assets.teamimageOff[ii] = assets.teamimageOff[ii].resize((newwidth, newheight), resample=Image.Resampling.LANCZOS) # from pillow 10 and on
+        # crop images to button width
+        left = int((newwidth - buttonwidth) / 2)
+        right = int((newwidth - buttonwidth) / 2) + buttonwidth
+        assets.teamimageOn[ii] = assets.teamimageOn[ii].crop( [ left, 0, right, newheight ] )
+        assets.teamimageOff[ii] = assets.teamimageOff[ii].crop( [ left, 0, right, newheight ] )
+        # convert to tk photoimage
+        assets.teamimageResizeOn[ii] = ImageTk.PhotoImage(image=assets.teamimageOn[ii])
+        assets.teamimageResizeOff[ii] = ImageTk.PhotoImage(image=assets.teamimageOff[ii])
         # assign images
         widgets.teambuttons[ii].config(image=assets.teamimageResizeOff[ii])
         widgets.teambuttons[ii].config(selectimage=assets.teamimageResizeOn[ii])
