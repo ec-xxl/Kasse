@@ -689,40 +689,25 @@ def specialPlayerPay(parent):
             popupRoot.destroy()
         # run SQL query
 
-        def addPlayer():
-            specialPayPlayerAdd(parent)
-
         def callbackEnterGiven(*args):
             returnMoney = float(popupSVGiven.get()) - total_due
             popupSVReturn.set("%.2f" % returnMoney )
 
         # create window
         popupRoot = tk.Toplevel(bg="#C3C3C3")
-        # create treeview for player name list
-        popupWidgetTreeViewPlayersFrame = tk.Frame(popupRoot, bg="green")
-        popupWidgetTreeViewPlayers = ttk.Treeview(popupWidgetTreeViewPlayersFrame, height=1)
-        popupWidgetTreeViewPlayers["columns"] = ("Summe")
-        popupWidgetTreeViewPlayers.heading("#0", text="Name", anchor=tk.W)
-        popupWidgetTreeViewPlayers.heading("Summe", text="Summe")
-        popupWidgetTreeViewPlayers.column('#0', width=1, stretch=True)
-        popupWidgetTreeViewPlayers.column('Summe', width=1, stretch=True)
-        popupWidgetTreeViewPlayersVSB = tk.Scrollbar(popupWidgetTreeViewPlayersFrame, orient="vertical", command=popupWidgetTreeViewPlayers.yview, width=35)
-        popupWidgetTreeViewPlayers.configure(yscrollcommand=popupWidgetTreeViewPlayersVSB.set)
         # create frame for treeView and ScrollBar
         popupWidgetTreeViewFrame = tk.Frame(popupRoot, bg="green")
         # create treeview
         popupWidgetTreeView = ttk.Treeview(popupWidgetTreeViewFrame, height=1)
-        popupWidgetTreeView["columns"] = ("Spieler", "Preis", "Anzahl", "Gesamt", "Bezahlt")
+        popupWidgetTreeView["columns"] = ("Preis", "Anzahl", "Gesamt", "Bezahlt")
         # configure treeview headings
         popupWidgetTreeView.heading("#0", text="Bestellung")
-        popupWidgetTreeView.heading("Spieler", text="Spieler", anchor=tk.W)
         popupWidgetTreeView.heading("Preis", text="Preis", anchor=tk.W)
         popupWidgetTreeView.heading("Anzahl", text="Anzahl", anchor=tk.W)
         popupWidgetTreeView.heading("Gesamt", text="Gesamt")
         popupWidgetTreeView.heading("Bezahlt", text="Bezahlt")
         # configure treeview columns
         popupWidgetTreeView.column('#0', width=100, stretch=True)
-        popupWidgetTreeView.column('Spieler', width=20, stretch=True)
         popupWidgetTreeView.column('Preis', width=20, stretch=True)
         popupWidgetTreeView.column('Anzahl', width=10, stretch=True)
         popupWidgetTreeView.column('Gesamt', width=20, stretch=True)
@@ -736,10 +721,9 @@ def specialPlayerPay(parent):
         popupSVTotalStorno = tk.StringVar()
         popupSVTotalDue = tk.StringVar()
         popupSVGiven = tk.StringVar()
-        popupSVGiven.trace_add("write", callbackEnterGiven)
+        # popupSVGiven.trace_add("write", callbackEnterGiven)
+        popupSVGiven.trace("w", callbackEnterGiven)
         popupSVReturn = tk.StringVar()
-        #
-        popupWidgetButtonAddPlayer = tk.Button(popupRoot, text="Spieler hinzufügen", command=lambda: addPlayer())
         # create widgets
         popupWidgetDescTotal = tk.Label(popupRoot, text="Summe:")
         popupWidgetDescPaid = tk.Label(popupRoot, text="Bisher bezahlt:")
@@ -771,7 +755,6 @@ def specialPlayerPay(parent):
         popupWidgetLabelDue.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15, "bold"), width=1, height=1, bg="#C3C3C3")
         popupWidgetLabelInfo.configure(image=popupPixel, compound="center", anchor="w", font=(None, 15), width=1, height=1, bg="#C3C3C3")
         popupWidgetTextInfo.configure(height=1, width=1)
-        popupWidgetButtonAddPlayer.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         popupWidgetButtonAbort.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         popupWidgetButtonPay.configure(image=popupPixel, compound="center", font=(None, 15), width=1, height=1, highlightbackground="#C3C3C3")
         #
@@ -780,8 +763,6 @@ def specialPlayerPay(parent):
         popupWidgetLabelGiven.configure(justify="center", font=(None, 15, "bold"))
         popupWidgetLabelReturn.configure(justify="center", font=(None, 15, "bold"))
         # place widgets on grid
-        popupWidgetTreeViewPlayersFrame.grid(column=0, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-        popupWidgetButtonAddPlayer.grid(column=2, row=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
 
         popupWidgetTreeViewFrame.grid(column=0, row=1, columnspan=4, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -805,8 +786,6 @@ def specialPlayerPay(parent):
         popupWidgetButtonAbort.grid(column=0, row=8, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         popupWidgetButtonPay.grid(column=2, row=8, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
         # use pack for treeview and vsb
-        popupWidgetTreeViewPlayers.pack(fill="both", side="left", expand=tk.TRUE)
-        popupWidgetTreeViewPlayersVSB.pack(fill="both", side="right")
         popupWidgetTreeView.pack(fill="both", side="left", expand=tk.TRUE)
         popupWidgetTreeViewVSB.pack(fill="both", side="right")
         # configure grid
