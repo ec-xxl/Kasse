@@ -137,8 +137,8 @@ def popupQuestionYESNO(parent, message, title, colour):
     popupRoot.rowconfigure(1, weight=1)
     # configure popup window
     popupRoot.title(title)
-    # popupRoot.overrideredirect(1)
-    popupRoot.wm_attributes('-type', 'splash')
+    popupRoot.overrideredirect(1)
+    #popupRoot.wm_attributes('-type', 'splash')
     popupRoot.attributes("-topmost", True)  # Always keep window on top of others
     popupRoot.focus_set()
     popupRoot.grab_set()  # make this the only accessible window
@@ -295,7 +295,7 @@ def playerAdd(parent):
         popupRoot.columnconfigure(1, weight=1)
         # configure popup window
         popupRoot.title("Spieler hinzufügen")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -349,7 +349,7 @@ def playerRename(parent):
         popupRoot.bind("<Return>", callback)
         # configure popup window
         popupRoot.title("Spieler umbenennen")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -455,7 +455,7 @@ def playerShowSum(parent):
         popupSVTotalDue.set("%.2f €" % total_due)
         # configure popup window
         popupRoot.title("Summe")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -608,7 +608,7 @@ def specialOrderStorno(parent):
         popupSVTotalSum.set(str(total) + " €")
         # configure popup window
         popupRoot.title("Stornieren")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -664,7 +664,7 @@ def specialPayPlayerAdd(parent):
         popupRoot.columnconfigure(1, weight=1)
         # configure popup window
         popupRoot.title("Weiteren Spieler abrechnen")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -850,7 +850,7 @@ def specialPlayerPay(parent):
             popupRoot.destroy()
         # configure popup window
         popupRoot.title("Spieler Abrechnen")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
@@ -894,7 +894,7 @@ def specialPlayerAddNote(parent):
         popupRoot.columnconfigure(1, weight=1)
         # configure popup window
         popupRoot.title("Spieler hinzufügen")
-        # popupRoot.overrideredirect(1)
+        popupRoot.overrideredirect(1)
         popupRoot.wm_attributes('-type', 'splash')
         popupRoot.attributes("-topmost", True)  # Always keep window on top of others
         popupRoot.focus_set()
