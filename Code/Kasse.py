@@ -675,6 +675,12 @@ def specialPayPlayerAdd(parent):
         # make parent window wait
         parent.wait_window(popupRoot)
 
+def is_float(element) -> bool:
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
 
 def specialPlayerPay(parent):
     playerID = getSelectedPlayerID()
@@ -690,8 +696,15 @@ def specialPlayerPay(parent):
         # run SQL query
 
         def callbackEnterGiven(*args):
-            returnMoney = float(popupSVGiven.get()) - total_due
-            popupSVReturn.set("%.2f" % returnMoney )
+            string = popupSVGiven.get()
+            if (is_float(string)):
+                print("true")
+                given = float(string)
+                returnMoney = given - total_due
+                popupSVReturn.set("%.2f" % returnMoney )
+            else:
+                print("false")
+                popupSVReturn.set("FEHLER")
 
         # create window
         popupRoot = tk.Toplevel(bg="#C3C3C3")
