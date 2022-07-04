@@ -1,16 +1,23 @@
-Kuchen;1;0
+Kuchen kl.;1;0
+Kuchen gr.;1.5;0
 Salat kl.;1;0
 Salat gr.;2;0
-Wurst;2;0
+Brötchen;1;0
+Wurst;2.8;0
 Feta;2.5;0
-Steak;3;0
-Limonade;1;1
-Saft;1;1
-Radler;1.5;1
-Bier;1.5;1
+Steak;3.5;0
+Gemüsepfanne;2;0
+Vegi-Patty;2.5;0
+Kaffee/Kakao;0.5;1
+Wasser;1;1
+Saft;1.2;1
+Limonade;1.2;1
+Radler;1.8;1
+Bier;1.8;1
 Shot;1;1
-Longdrink;3;1
+Longdrink;3.5;1
 Caipirinha;4;1
+Aperol;4;1
 Scheibe;12;2
-Sticker;1;2
+Sticker;0.5;2
 Sonstiges;1;2
