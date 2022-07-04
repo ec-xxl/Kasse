@@ -1104,7 +1104,7 @@ f = open("food.txt", "r")
 assets.foodList = f.readlines()
 f.close()
 
-settings.itemsPerRow = 4
+settings.itemsPerRow = 5
 
 for i in range(len(assets.foodList)):
     [name, price, category] = assets.foodList[i].strip().split(";")
