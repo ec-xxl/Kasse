@@ -704,7 +704,7 @@ def specialPlayerPay(parent):
                 popupSVReturn.set("%.2f" % returnMoney )
             else:
                 print("false")
-                popupSVReturn.set("FEHLER")
+                popupSVReturn.set("Bitte ZAHL eingeben")
 
         # create window
         popupRoot = tk.Toplevel(bg="#C3C3C3")
