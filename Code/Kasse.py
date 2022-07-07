@@ -840,6 +840,7 @@ def specialPlayerPay(parent):
             runQuery(set_payed, (playerID,))
             playerDisplay(getSelectedTeam())
             popupRoot.destroy()
+
         # configure popup window
         popupRoot.title("Spieler Abrechnen")
         popupRoot.overrideredirect(1)
@@ -850,6 +851,8 @@ def specialPlayerPay(parent):
         windowHeight = 700
         windwowWidth = 800
         popupRoot.geometry("%dx%d+%d+%d" % (windwowWidth, windowHeight, (root.winfo_screenwidth() - windwowWidth) / 2, (root.winfo_screenheight() - windowHeight) / 2))
+        # focus on entry field
+        popupWidgetLabelGiven.focus()
         # make parent window wait
         parent.wait_window(popupRoot)
 
