@@ -179,7 +179,7 @@ runQuery(create_table_order)
 def sqlExportDB():
     inpsql3 = sqlite3.connect('kasse.db')
     sql3_cursor = inpsql3.cursor()
-    sql3_cursor.execute('SELECT players.player_name, players.team_name, purchases.item_name, purchases.item_quantity, purchases.price, purchases.is_payed FROM purchases join players where purchases.player_id=players.id ORDER BY purchases.is_payed, players.team_name, players.player_name')
+    sql3_cursor.execute('SELECT players.player_name, players.team_name, purchases.item_name, purchases.item_quantity, purchases.price, purchases.is_payed, purchases.is_storno FROM purchases join players where purchases.player_id=players.id ORDER BY purchases.is_payed, players.team_name, players.player_name')
     with open('kasse.csv', 'w') as out_csv_file:
         csv_out = csv.writer(out_csv_file)
         # write header
